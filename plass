@@ -1,0 +1,437 @@
+#!/usr/bin/env perl
+#
+# Copyright (c) 2022 Omar Polo <op@omarpolo.com>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+use strict;
+use warnings;
+use v5.32;
+
+use open ":std", ":encoding(UTF-8)";
+
+use Getopt::Long qw(:config bundling require_order);
+use Pod::Usage;
+use File::Basename;
+use File::Find;
+
+my $store = $ENV{'PLASS_STORE'} || $ENV{'HOME'}.'/.password-store';
+
+my $got = $ENV{'PLASS_GOT'} || 'got';
+my $tog = $ENV{'PLASS_TOG'} || 'tog';
+
+my $gpg = $ENV{'PLASS_GPG'} || 'gpg2';
+my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to);
+
+my $default_chars = $ENV{'PLASS_CHARS'} || '-_A-Za-z0-9';
+my $default_length = $ENV{'PLASS_LENGTH'};
+if (!defined($default_length) || $default_length lt 0) {
+	$default_length = 32;
+}
+
+GetOptions(
+	"h|?" => sub { pod2usage(0) },
+    ) or pod2usage(1);
+
+my $cmd = shift or pod2usage(1);
+
+my %subcmd = (
+	cat	=> [\&cmd_cat,		"entries..."],
+	find	=> [\&cmd_find,		"[pattern]"],
+	gen	=> [\&cmd_gen,		"[-c chars] [-l length] entry"],
+	got	=> [\&cmd_got,		"arguments ..."],
+	mv	=> [\&cmd_mv,		"from to"],
+	oneshot => [\&cmd_oneshot,	"[-c chars] [-l length]"],
+	regen	=> [\&cmd_regen,	"[-c chars] [-l length] entry"],
+	rm	=> [\&cmd_rm,		"entry"],
+	tog	=> [\&cmd_tog,		"arguments ..."],
+	write	=> [\&cmd_write,	"entry"],
+    );
+pod2usage(1) unless defined $subcmd{$cmd};
+my ($fn, $usage) = @{$subcmd{$cmd}};
+chdir $store;
+$fn->();
+exit 0;
+
+
+# utils
+
+sub usage {
+	my $prog = basename $0;
+	say STDERR "Usage: $prog $cmd $usage";
+	exit 1;
+}
+
+sub name2file {
+	my $f = shift;
+	$f .= ".gpg" unless $f =~ m,\.gpg$,;
+	return $f;
+}
+
+# tr -cd -- $chars < /dev/random | dd bs=$len count=1 status=none
+sub gen {
+	my ($chars, $length) = @_;
+	my $pass = "";
+
+	open(my $fh, '<:raw', '/dev/random')
+	    or die "can't open /dev/random: $!";
+	my $l = $length;
+	while ($l gt 0) {
+		read($fh, my $t, $length * 4)
+		    or die "failed to read /dev/random: $!";
+		$t =~ s/[^$chars]//g;
+		$l -= length($t);
+		$pass .= $t;
+	}
+	close($fh);
+
+	return substr($pass, 0, $length);
+}
+
+sub readpass {
+	# todo some stty black magic to avoid echo
+	print shift if -t;
+	my $pass = <>;
+	die "failed to read stdin: $!" unless defined($pass);
+	chomp $pass;
+	return $pass;
+}
+
+sub writepass {
+	my ($file, $pass) = @_;
+
+	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
+	    '-o', $file);
+	open my $fh, '|-', @args;
+	say $fh "$pass";
+	close($fh);
+}
+
+sub recipient {
+	open my $fh, '<', "$store/.gpg-id"
+	    or die "can't open recipient file";
+	my $r = <$fh>;
+	chomp $r;
+	close($fh);
+	return $r;
+}
+
+sub passfind {
+	my $pattern = shift;
+	my @entries;
+
+	find({
+		wanted => sub {
+			if (m,/.git$, || m,/.got$,) {
+				$File::Find::prune = 1;
+				return;
+			}
+
+			return if defined($pattern) && ! m/$pattern/;
+			return unless -f && m,.gpg$,;
+
+			s,^$store/*,,;
+			s,.gpg$,,;
+			push @entries, $_;
+		},
+		no_chdir => 1,
+		follow_fast => 1,
+	     }, ($store));
+	return sort(@entries);
+}
+
+sub got {
+	open my $fh, '-|', ($got, @_);
+	close($fh);
+	die "\"@_\" failed" if $? != 0;
+}
+
+sub got_add {
+	got 'add', '-I', shift;
+}
+
+sub got_rm {
+	got 'remove', '-f', shift;
+}
+
+sub got_ci {
+	system ($got, 'commit', '-m', shift);
+	die "failed to commit changes: $!" if $? == -1;
+}
+
+
+# cmds
+
+sub cmd_cat {
+	GetOptions('h|?' => \&usage) or usage;
+	usage unless @ARGV;
+
+	while (@ARGV) {
+		my $file = name2file(shift @ARGV);
+		system ($gpg, @gpg_flags, '-d', $file);
+		die "failed to exec $gpg: $!" if $? == -1;
+	}
+}
+
+sub cmd_find {
+	GetOptions('h|?' => \&usage) or usage;
+	usage if @ARGV gt 1;
+
+	map { say $_ } passfind(shift @ARGV);
+}
+
+sub cmd_gen {
+	my $chars = $default_chars;
+	my $length = $default_length;
+
+	GetOptions(
+		'c=s' => sub { $chars = $_[1] },
+		'h|?' => \&usage,
+		'l=i' => sub { $length = $_[1] },
+	    ) or usage;
+	usage if @ARGV ne 1;
+
+	my $name = shift @ARGV;
+	my $file = name2file $name;
+	die "password already exists: $file\n" if -e $file;
+
+	my $pass = gen($chars, $length);
+	writepass($file, $pass);
+
+	got_add $file;
+	got_ci "+$name";
+}
+
+sub cmd_got {
+	chdir $store;
+	exec $got, @ARGV;
+}
+
+# TODO: handle moving directories?
+sub cmd_mv {
+	GetOptions('h|?' => \&usage) or usage;
+	usage if @ARGV ne 2;
+
+	my $a = shift @ARGV;
+	my $b = shift @ARGV;
+
+	my $pa = name2file $a;
+	my $pb = name2file $b;
+
+	die "source password doesn't exist" unless -f $pa;
+	die "target password exists" if -f $pb;
+
+	rename $pa, $pb or die "can't rename $a to $b: $!";
+
+	got_rm $pa;
+	got_add $pb;
+	got_ci "mv $a $b";
+}
+
+sub cmd_oneshot {
+	my $chars = $default_chars;
+	my $length = $default_length;
+
+	GetOptions(
+		'c=s' => sub { $chars = $_[1] },
+		'h|?' => \&usage,
+		'l=i' => sub { $length = $_[1] },
+	    ) or usage;
+	usage if @ARGV ne 0;
+
+	say gen($chars, $length);
+}
+
+sub cmd_regen {
+	my $chars = $default_chars;
+	my $length = $default_length;
+
+	GetOptions(
+		'c=s' => sub { $chars = $_[1] },
+		'h|?' => \&usage,
+		'l=i' => sub { $length = $_[1] },
+	    ) or usage;
+	usage if @ARGV ne 1;
+
+	my $name = shift @ARGV;
+	my $file = name2file $name;
+	die "password doesn't exist" unless -f $file;
+
+	my $pass = gen($chars, $length);
+	writepass($file, $pass);
+
+	got_add $file;
+	got_ci "regen $name";
+}
+
+sub cmd_rm {
+	GetOptions('h|?' => \&usage) or usage;
+	usage if @ARGV ne 1;
+
+	my $name = shift @ARGV;
+	my $file = name2file $name;
+
+	got_rm $file;
+	got_ci "-$name";
+}
+
+sub cmd_tog {
+	chdir $store;
+	exec $tog, @ARGV;
+}
+
+sub cmd_write {
+	GetOptions('h|?' => \&usage) or usage;
+	usage if @ARGV ne 1;
+
+	my $name = shift @ARGV;
+	my $file = name2file $name;
+
+	my $p1 = readpass "Enter the password: ";
+	my $p2 = readpass "Retype the password: ";
+	die "Passwords don't match\n" if $p1 ne $p2;
+
+	writepass($file, $p1);
+
+	got_add $file;
+	got_ci "+$name";
+}
+
+__END__
+
+=head1 NAME
+
+B<plass> - manage passwords
+
+=head1 SYNOPSIS
+
+B<plass> I<command> [-h] [arg ...]
+
+Valid subcommands are: cat, find, gen, got, mv, oneshot, regen, rm,
+tog, write.
+
+=head1 DESCRIPTION
+
+B<plass> is a simple password manager.  It manages passwords stored in
+a directory tree rooted at I<~/.password-store> (or I<$PLASS_STORE>),
+where every password is a single file encrypted with gpg2(1).
+
+Passwords entries can be referenced using the path relative to the
+store directory.  The extension ".gpg" is optional.
+
+The whole store is supposed to be managed by the got(1) version
+control system.
+
+The commands for B<plass> are as follows:
+
+=over
+
+=item B<cat> I<entries ...>
+
+Decrypt and print the passwords of the given I<entries>.
+
+=item B<find> [I<pattern>]
+
+Print one per line all the entries of the store, optionally filtered
+by the given I<pattern>.
+
+=item B<gen> [B<-c> I<chars>] [B<-l> I<length>] I<entry>
+
+Generate and persist a password for the given I<entry> in the store.
+B<-c> can be used to control the characters allowed in the password
+(I<-_A-Za-z0-9> by default) and B<-l> the length (32 by default.)
+
+=item B<got> I<arguments ...>
+
+Execute got(1) in the password store directory with the given
+I<arguments>.
+
+=item B<mv> I<from> I<to>
+
+Rename a password entry, doesn't work with directories.  I<from> must
+exist and I<to> mustn't.
+
+=item B<oneshot> [B<-c> I<chars>] [B<-l> I<length>]
+
+Like B<gen> but prints the the generated password and does not persist
+it.
+
+=item B<regen> [B<-c> I<chars>] [B<-l> I<length>] I<entry>
+
+Like B<gen> but re-generates a password in-place.
+
+=item B<rm> I<entry>
+
+Remove the password I<entry> from the store.
+
+=item B<tog> I<arguments ...>
+
+Execute tog(1) in the password store directory with the given
+I<arguments>.
+
+=item B<write> I<entry>
+
+Prompt for a password and persist it in the store under the given
+I<entry> name.
+
+=back
+
+=head1 CREATING A PASSWORD STORE
+
+A password store is just a normal got(1) repository with a worktree
+checked out in I<~/.password-store> (or I<$PLASS_STORE>).  The only
+restriction is that a file called I<.gpg-id> must exist in the root of
+the work tree for most B<plass> commands to work.
+
+For example, a got repository and password store can be created as
+follows:
+
+	$ mkdir .password-store
+	$ cd .password-store
+	$ echo foo@example.com > .gpg-id
+	$ cd ~/git
+	$ got init pass.git
+	$ cd pass.git
+	$ got import -m 'initial import' ~/.password-store
+	$ cd ~/.password-store
+	$ got checkout -E ~/git/pass.git
+
+See got(1) for more information.
+
+Otherwise, if a repository already exists, a password-store can be
+checked out more simply as:
+
+	$ got checkout ~/git/pass.git ~/.password-store
+
+To migrate from pass(1), just delete I<~/.password-store> and checkout
+it again usign got(1).
+
+=head1 ACKNOWLEDGEMENTS
+
+B<plass> was heavily influenced by pass(1) in the design, but it's a
+complete different implementation with different tools involved.
+
+=head1 AUTHORS
+
+The B<plass> utility was written by Omar Polo <I<op@omarpolo.com>>.
+
+=head1 CAVEATS
+
+B<plass> B<find> output format isn't designed to handle files with
+newlines in them.  Use find(1) B<-print0> or similar if it's a
+concern.
+
+There isn't a B<init> sub-command, the store initialisation must be
+performed manually.
+
+=cut
