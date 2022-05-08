@@ -416,6 +416,51 @@ checked out more simply as:
 To migrate from pass(1), just delete I<~/.password-store> and checkout
 it again usign got(1).
 
+=head1 ENVIRONMENT
+
+=over
+
+=item PLASS_CHARS
+
+Default range of characters to use to generate passwords.
+
+=item PLASS_GOT
+
+Path to the got(1) executable.
+
+=item PLASS_GPG
+
+Path to the gpg2(1) executable.
+
+=item PLASS_LENGTH
+
+Default length for the passwords generated.
+
+=item PLASS_STORE
+
+Path to the password-store directory tree.  I<~/.password-store> by
+default.
+
+=item PLASS_TOG
+
+Path to the tog(1) executable.
+
+=back
+
+=head1 FILES
+
+=over
+
+=item I<~/.password-store>
+
+Password store used by default.
+
+=item I<~/.password-store/.gpg-id>
+
+File containing the gpg recipient used to encrypt the passwords.
+
+=back
+
 =head1 ACKNOWLEDGEMENTS
 
 B<plass> was heavily influenced by pass(1) in the design, but it's a
