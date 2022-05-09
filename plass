@@ -363,7 +363,7 @@ exist and I<to> mustn't.
 
 =item B<oneshot> [B<-c> I<chars>] [B<-l> I<length>]
 
-Like B<gen> but prints the the generated password and does not persist
+Like B<gen> but prints the the generated password instead of persist
 it.
 
 =item B<regen> [B<-c> I<chars>] [B<-l> I<length>] I<entry>
