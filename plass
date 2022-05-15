@@ -297,11 +297,8 @@ sub cmd_write {
 	my $name = shift @ARGV;
 	my $file = name2file $name;
 
-	my $p1 = readpass "Enter the password: ";
-	my $p2 = readpass "Retype the password: ";
-	die "Passwords don't match\n" if $p1 ne $p2;
-
-	writepass($file, $p1);
+	my $pass = readpass "Enter the password: ";
+	writepass($file, $pass);
 
 	got_add $file;
 	got_ci "+$name";
