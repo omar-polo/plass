@@ -33,7 +33,7 @@ my $tog = $ENV{'PLASS_TOG'} || 'tog';
 my $gpg = $ENV{'PLASS_GPG'} || 'gpg2';
 my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to);
 
-my $default_chars = $ENV{'PLASS_CHARS'} || '-_A-Za-z0-9';
+my $default_chars = $ENV{'PLASS_CHARS'} || '!-~';
 my $default_length = $ENV{'PLASS_LENGTH'};
 if (!defined($default_length) || $default_length lt 0) {
 	$default_length = 32;
@@ -349,7 +349,8 @@ by the given I<pattern>.
 
 Generate and persist a password for the given I<entry> in the store.
 B<-c> can be used to control the characters allowed in the password
-(I<-_A-Za-z0-9> by default) and B<-l> the length (32 by default.)
+(by default I<!-~> i.e. all the printable ASCII character) and B<-l>
+the length (32 by default.)
 
 =item B<got> I<arguments ...>
 
