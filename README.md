@@ -2,8 +2,8 @@
 
 plass is a password manager inspired by password-store, but
 reimplemented with a smaller and (IMHO) cleaner interface.  It doesn't
-have fancy trees in the output, not colors; the absence of these are
-considered features.
+have fancy trees nor colors in the output; the absence of these is
+considered a feature.
 
 In addition, plass uses got(1) to manage the password store (but can
 be easily patched to use git(1).)
