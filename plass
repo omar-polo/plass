@@ -289,10 +289,10 @@ sub cmd_tee {
 
 	my $pass = readpass "Enter the password: ";
 	writepass($file, $pass);
-	say $pass unless $q;
 
 	got_add $file;
 	got_ci (-f $file ? "update $name" : "+$name");
+	say $pass unless $q;
 }
 
 sub cmd_tog {
