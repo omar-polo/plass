@@ -163,15 +163,16 @@ sub got {
 	# discard stdout
 	open my $fh, '-|', ($got, @_);
 	close($fh);
-	exit 1 if $?;
+	return !$?;
 }
 
 sub got_add {
-	got 'add', '-I', shift;
+	return got 'add', '-I', shift;
 }
 
 sub got_rm {
-	got 'remove', '-f', shift;
+	got 'remove', '-f', shift
+	    or exit(1);
 }
 
 sub got_ci {
