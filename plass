@@ -388,10 +388,9 @@ follows:
 	$ echo foo@example.com > .gpg-id
 	$ cd ~/git
 	$ got init pass.git
-	$ cd pass.git
-	$ got import -m 'initial import' ~/.password-store
+	$ got import -r pass.git -m 'initial import' ~/.password-store
 	$ cd ~/.password-store
-	$ got checkout -E ~/git/pass.git
+	$ got checkout -E ~/git/pass.git .
 
 See got(1) for more information.
 
