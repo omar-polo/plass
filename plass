@@ -54,8 +54,8 @@ my %subcmd = (
 	oneshot => [\&cmd_oneshot,	"[-c chars] [-l length]"],
 	regen	=> [\&cmd_regen,	"[-c chars] [-l length] entry"],
 	rm	=> [\&cmd_rm,		"entry"],
+	tee	=> [\&cmd_tee,		"[-q] entry"],
 	tog	=> [\&cmd_tog,		"arguments ..."],
-	write	=> [\&cmd_write,	"entry"],
     );
 pod2usage(1) unless defined $subcmd{$cmd};
 my ($fn, $usage) = @{$subcmd{$cmd}};
@@ -177,8 +177,19 @@ sub got_rm {
 }
 
 sub got_ci {
-	system ($got, 'commit', '-m', shift);
-	die "failed to commit changes: $!" if $? == -1;
+	my $pid = fork;
+	die "failed to fork: $!" unless defined $pid;
+
+	if ($pid ne 0) {
+		wait;
+		die "failed to commit changes" if $?;
+		return;
+	}
+
+	open (STDOUT, ">&", \*STDERR)
+	    or die "can't redirect stdout to stderr";
+	exec ($got, 'commit', '-m', shift)
+	    or die "failed to exec $got: $!";
 }
 
 
@@ -297,13 +308,12 @@ sub cmd_rm {
 	got_ci "-$name";
 }
 
-sub cmd_tog {
-	chdir $store;
-	exec $tog, @ARGV;
-}
-
-sub cmd_write {
-	GetOptions('h|?' => \&usage) or usage;
+sub cmd_tee {
+	my $q;
+	GetOptions(
+		'h|?' => \&usage,
+		'q'   => \$q,
+	    ) or usage;
 	usage if @ARGV ne 1;
 
 	my $name = shift @ARGV;
@@ -311,9 +321,15 @@ sub cmd_write {
 
 	my $pass = readpass "Enter the password: ";
 	writepass($file, $pass);
+	say $pass unless $q;
 
 	got_add $file;
-	got_ci "+$name";
+	got_ci (-f $file ? "update $name" : "+$name");
+}
+
+sub cmd_tog {
+	chdir $store;
+	exec $tog, @ARGV;
 }
 
 __END__
@@ -327,7 +343,7 @@ B<plass> - manage passwords
 B<plass> I<command> [-h] [arg ...]
 
 Valid subcommands are: cat, find, gen, got, mv, oneshot, regen, rm,
-tog, write.
+tee, tog.
 
 =head1 DESCRIPTION
 
@@ -384,15 +400,15 @@ Like B<gen> but re-generates a password in-place.
 
 Remove the password I<entry> from the store.
 
+=item B<tee> [B<-q>] I<entry>
+
+Prompt for a password, persist it in the store under the given
+I<entry> name and then print it again to standard output.
+
 =item B<tog> I<arguments ...>
 
 Execute tog(1) in the password store directory with the given
 I<arguments>.
-
-=item B<write> I<entry>
-
-Prompt for a password and persist it in the store under the given
-I<entry> name.
 
 =back
 
