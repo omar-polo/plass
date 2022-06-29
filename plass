@@ -48,12 +48,12 @@ my $cmd = shift or pod2usage(1);
 my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
 	find	=> [\&cmd_find,		"[pattern]"],
-	gen	=> [\&cmd_gen,		"[-c chars] [-l length] entry"],
-	got	=> [\&cmd_got,		"arguments ..."],
+	gen	=> [\&cmd_gen,		"[-nq] [-c chars] [-l length] entry"],
+	got	=> [\&cmd_got,		"args ..."],
 	mv	=> [\&cmd_mv,		"from to"],
 	rm	=> [\&cmd_rm,		"entry"],
 	tee	=> [\&cmd_tee,		"[-q] entry"],
-	tog	=> [\&cmd_tog,		"arguments ..."],
+	tog	=> [\&cmd_tog,		"args ..."],
     );
 pod2usage(1) unless defined $subcmd{$cmd};
 my ($fn, $usage) = @{$subcmd{$cmd}};
