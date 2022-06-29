@@ -38,22 +38,6 @@ if (!defined($default_length) || $default_length lt 0) {
 	$default_length = 32;
 }
 
-my $usage = "[-h] [command argument ...]";
-my $cmd;
-sub usage {
-	my $prog = basename $0;
-	if (defined($cmd)) {
-		say STDERR "Usage: $prog $cmd $usage";
-	} else {
-		say STDERR "Usage: $prog $usage";
-	}
-	exit 1;
-}
-
-GetOptions("h|?" => \&usage) or usage();
-
-$cmd = shift // 'find';
-
 my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
 	find	=> [\&cmd_find,		"[pattern]"],
@@ -64,6 +48,23 @@ my %subcmd = (
 	tee	=> [\&cmd_tee,		"[-q] entry"],
 	tog	=> [\&cmd_tog,		"args ..."],
     );
+
+my $usage = "[-h] [command argument ...]";
+my $cmd;
+sub usage {
+	my $prog = basename $0;
+	if (defined($cmd)) {
+		say STDERR "Usage: $prog $cmd $usage";
+	} else {
+		say STDERR "Usage: $prog $usage";
+		say STDERR "commands: ", join(' ', sort(keys %subcmd));
+	}
+	exit 1;
+}
+
+GetOptions("h|?" => \&usage) or usage();
+
+$cmd = shift // 'find';
 usage() unless defined $subcmd{$cmd};
 my $fn;
 ($fn, $usage) = @{$subcmd{$cmd}};
