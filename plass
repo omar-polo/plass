@@ -124,11 +124,20 @@ sub writepass {
 
 	mkdirs(dirname $file);
 
+	# temporary redirect stdout to $file
+	open(my $stdout, '>&', STDOUT);
+	open(STDOUT, '>', $file);
+
 	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
-	    '-o', $file);
+	    '-o', '-');
 	open my $fh, '|-', @args;
 	say $fh "$pass";
 	close($fh);
+	my $ok = !$?;
+
+	open(STDOUT, '>&', $stdout); # restore stdout
+
+	die "failed to run $gpg\n" unless $ok;
 }
 
 sub recipient {
