@@ -6,17 +6,12 @@ have fancy trees nor colors in the output; the absence of these is
 considered a feature.
 
 In addition, plass uses got(1) to manage the password store (but can
-be easily patched to use git(1).)
+be easily patched to use git(1) if desired.)
 
 At the moment plass is completely compatible with pass, the same gpg2
 commands are used to decrypt and encrypt the passwords entries.  In
 the future, I'd like to switch the encryption tool to either signify
 or age.
-
-
-## Usage
-
-See `perldoc plass`.
 
 
 ## License
