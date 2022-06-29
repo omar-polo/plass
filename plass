@@ -30,7 +30,7 @@ my $got = $ENV{'PLASS_GOT'} // 'got';
 my $tog = $ENV{'PLASS_TOG'} // 'tog';
 
 my $gpg = $ENV{'PLASS_GPG'} // 'gpg2';
-my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to);
+my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to --use-agent);
 
 my $default_chars = $ENV{'PLASS_CHARS'} // '!-~';
 my $default_length = $ENV{'PLASS_LENGTH'};
