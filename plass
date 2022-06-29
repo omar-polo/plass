@@ -241,7 +241,6 @@ sub cmd_gen {
 }
 
 sub cmd_got {
-	chdir $store;
 	exec $got, @ARGV;
 }
 
@@ -297,7 +296,6 @@ sub cmd_tee {
 }
 
 sub cmd_tog {
-	chdir $store;
 	exec $tog, @ARGV;
 }
 
