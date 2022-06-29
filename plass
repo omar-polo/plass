@@ -273,6 +273,7 @@ sub cmd_mv {
 	die "source password doesn't exist" unless -f $pa;
 	die "target password exists" if -f $pb;
 
+	mkdirs(dirname $pb);
 	rename $pa, $pb or die "can't rename $a to $b: $!";
 
 	got_rm $pa;
