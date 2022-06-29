@@ -51,7 +51,7 @@ my %subcmd = (
 	gen	=> [\&cmd_gen,		"[-nq] [-c chars] [-l length] entry"],
 	got	=> [\&cmd_got,		"args ..."],
 	mv	=> [\&cmd_mv,		"from to"],
-	rm	=> [\&cmd_rm,		"entry"],
+	rm	=> [\&cmd_rm,		"entries..."],
 	tee	=> [\&cmd_tee,		"[-q] entry"],
 	tog	=> [\&cmd_tog,		"args ..."],
     );
@@ -267,13 +267,15 @@ sub cmd_mv {
 
 sub cmd_rm {
 	GetOptions('h|?' => \&usage) or usage;
-	usage if @ARGV ne 1;
+	usage unless @ARGV;
 
-	my $name = shift @ARGV;
-	my $file = name2file $name;
+	while (@ARGV) {
+		my $name = shift @ARGV;
+		my $file = name2file $name;
 
-	got_rm $file;
-	got_ci "-$name";
+		got_rm $file;
+		got_ci "-$name";
+	}
 }
 
 sub cmd_tee {
@@ -359,7 +361,7 @@ I<arguments>.
 Rename a password entry, doesn't work with directories.  I<from> must
 exist and I<to> mustn't.
 
-=item B<rm> I<entry>
+=item B<rm> I<entries...>
 
 Remove the password I<entry> from the store.
 
