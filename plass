@@ -21,7 +21,6 @@ use v5.32;
 use open ":std", ":encoding(UTF-8)";
 
 use Getopt::Long qw(:config bundling require_order);
-use Pod::Usage;
 use File::Basename;
 use File::Find;
 
@@ -39,11 +38,21 @@ if (!defined($default_length) || $default_length lt 0) {
 	$default_length = 32;
 }
 
-GetOptions(
-	"h|?" => sub { pod2usage(0) },
-    ) or pod2usage(1);
+my $usage = "[-h] [command argument ...]";
+my $cmd;
+sub usage {
+	my $prog = basename $0;
+	if (defined($cmd)) {
+		say STDERR "Usage: $prog $cmd $usage";
+	} else {
+		say STDERR "Usage: $prog $usage";
+	}
+	exit 1;
+}
 
-my $cmd = shift // 'find';
+GetOptions("h|?" => \&usage) or usage();
+
+$cmd = shift // 'find';
 
 my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
@@ -55,20 +64,15 @@ my %subcmd = (
 	tee	=> [\&cmd_tee,		"[-q] entry"],
 	tog	=> [\&cmd_tog,		"args ..."],
     );
-pod2usage(1) unless defined $subcmd{$cmd};
-my ($fn, $usage) = @{$subcmd{$cmd}};
+usage() unless defined $subcmd{$cmd};
+my $fn;
+($fn, $usage) = @{$subcmd{$cmd}};
 chdir $store;
 $fn->();
 exit 0;
 
 
 # utils
-
-sub usage {
-	my $prog = basename $0;
-	say STDERR "Usage: $prog $cmd $usage";
-	exit 1;
-}
 
 sub name2file {
 	my $f = shift;
@@ -300,173 +304,3 @@ sub cmd_tee {
 sub cmd_tog {
 	exec $tog, @ARGV;
 }
-
-__END__
-
-=head1 NAME
-
-B<plass> - manage passwords
-
-=head1 SYNOPSIS
-
-B<plass> I<command> [-h] [arg ...]
-
-Valid subcommands are: cat, find, gen, got, mv, rm, tee, tog.
-
-If no I<command> is given, B<find> is assumed.
-
-=head1 DESCRIPTION
-
-B<plass> is a simple password manager.  It manages passwords stored in
-a directory tree rooted at I<~/.password-store> (or I<$PLASS_STORE>),
-where every password is a single file encrypted with gpg2(1).
-
-Passwords entries can be referenced using the path relative to the
-store directory.  The extension ".gpg" is optional.
-
-The whole store is supposed to be managed by the got(1) version
-control system.
-
-The commands for B<plass> are as follows:
-
-=over
-
-=item B<cat> I<entries ...>
-
-Decrypt and print the passwords of the given I<entries>.
-
-=item B<find> [I<pattern>]
-
-Print one per line all the entries of the store, optionally filtered
-by the given I<pattern>.
-
-=item B<gen> [B<-nq>] [B<-c> I<chars>] [B<-l> I<length>] I<entry>
-
-Generate and persist a password for the given I<entry> in the store.
-B<-c> can be used to control the characters allowed in the password
-(by default I<!-~> i.e. all the printable ASCII character) and B<-l>
-the length (32 by default.)
-
-Unless B<-q> is provided, plass prints the generated password.
-
-If the B<-n> option is given, plass won't persist the password.
-
-=item B<got> I<arguments ...>
-
-Execute got(1) in the password store directory with the given
-I<arguments>.
-
-=item B<mv> I<from> I<to>
-
-Rename a password entry, doesn't work with directories.  I<from> must
-exist and I<to> mustn't.
-
-=item B<rm> I<entries...>
-
-Remove the password I<entry> from the store.
-
-=item B<tee> [B<-q>] I<entry>
-
-Prompt for a password, persist it in the store under the given
-I<entry> name and then print it again to standard output.
-
-=item B<tog> I<arguments ...>
-
-Execute tog(1) in the password store directory with the given
-I<arguments>.
-
-=back
-
-=head1 CREATING A PASSWORD STORE
-
-A password store is just a normal got(1) repository with a worktree
-checked out in I<~/.password-store> (or I<$PLASS_STORE>).  The only
-restriction is that a file called I<.gpg-id> must exist in the root of
-the work tree for most B<plass> commands to work.
-
-For example, a got repository and password store can be created as
-follows:
-
-	$ mkdir .password-store
-	$ cd .password-store
-	$ echo foo@example.com > .gpg-id
-	$ cd ~/git
-	$ got init pass.git
-	$ got import -r pass.git -m 'initial import' ~/.password-store
-	$ cd ~/.password-store
-	$ got checkout -E ~/git/pass.git .
-
-See got(1) for more information.
-
-Otherwise, if a repository already exists, a password-store can be
-checked out more simply as:
-
-	$ got checkout ~/git/pass.git ~/.password-store
-
-To migrate from pass(1), just delete I<~/.password-store> and checkout
-it again using got(1).
-
-=head1 ENVIRONMENT
-
-=over
-
-=item PLASS_CHARS
-
-Default range of characters to use to generate passwords.
-
-=item PLASS_GOT
-
-Path to the got(1) executable.
-
-=item PLASS_GPG
-
-Path to the gpg2(1) executable.
-
-=item PLASS_LENGTH
-
-Default length for the passwords generated.
-
-=item PLASS_STORE
-
-Path to the password-store directory tree.  I<~/.password-store> by
-default.
-
-=item PLASS_TOG
-
-Path to the tog(1) executable.
-
-=back
-
-=head1 FILES
-
-=over
-
-=item I<~/.password-store>
-
-Password store used by default.
-
-=item I<~/.password-store/.gpg-id>
-
-File containing the gpg recipient used to encrypt the passwords.
-
-=back
-
-=head1 ACKNOWLEDGEMENTS
-
-B<plass> was heavily influenced by pass(1) in the design, but it's a
-complete different implementation with different tools involved.
-
-=head1 AUTHORS
-
-The B<plass> utility was written by Omar Polo <I<op@omarpolo.com>>.
-
-=head1 CAVEATS
-
-B<plass> B<find> output format isn't designed to handle files with
-newlines in them.  Use find(1) B<-print0> or similar if it's a
-concern.
-
-There isn't a B<init> sub-command, the store initialisation must be
-performed manually.
-
-=cut
