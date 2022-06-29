@@ -1,0 +1,193 @@
+.\" Copyright (c) 2021, 2022 Omar Polo <op@omarpolo.com>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.Dd June 29, 2022
+.Dt PLASS 1
+.Os
+.Sh NAME
+.Nm plass
+.Nd manage passwords
+.Sh SYNOPSIS
+.Nm
+.Op Fl h
+.Oo
+.Cm command
+.Ar argument ...
+.Oc
+.Sh DESCRIPTION
+.Nm
+is a simple password manager.
+It manages paswords store in a directory tree rooted at
+.Pa ~/.password-store
+.Pq or at Ev PLASS_STORE ,
+where every password is a single file encrypted with
+.Xr gpg2 1 .
+.Pp
+Password entries can be referenced using the path relative to the
+store directory.
+The extension
+.Dq \&.gpg
+is optional.
+.Pp
+The whole store is supposed to be managed by the
+.Xr got 1
+version control system.
+.Pp
+The following commands are available:
+.Bl -tag -width Ds
+.It Cm cat Ar entries ...
+Decrypt and print the content of the given
+.Ar entries .
+.It Cm find Op Ar pattern
+Print one per line all the entries of the store, optionally filtered
+by the given
+.Ar pattern .
+.It Cm gen Oo Fl nq Oc Oo Fl c Ar chars Oc Oo Fl l Ar length Oc Ar entry
+Generate and persist a password for the given
+.Ar entry
+in the store.
+.Fl c
+can be used to control the characters allowed in the password
+(by default
+.Dq !-~
+i.e. all the printable ASCII characters)
+and
+.Fl l
+the length
+.Pq 32 by default .
+Unless the
+.Fl q
+flag is provided,
+.Nm
+prints the generated password.
+If the
+.Fl n
+flag is given, the password won't be persisted.
+.It Cm got Ar arguments
+Execute
+.Xr got 1
+in the password store directory with the given
+.Ar arguments .
+.It Cm mv Ar from Ar to
+Rename a password entry, doesn't work with directories.
+.Ar from
+must exists and
+.Ar to
+mustn't.
+.It Cm rm Ar entries ...
+Remove the given
+.Ar entries
+from the store.
+.It Cm tee Oo Fl q Oc Ar entry
+Prompt for a password and persist it into the store under the given
+.Ar entry
+name and the print it again on the standard output.
+If the
+.Fl q
+option is given, nothing is printed to standard output.
+.It Cm tog Ar arguments ...
+Execute
+.Xr tog 1
+in the password store directory with the given
+.Ar arguments .
+.El
+.Sh CREATING A PASSWORD STORE
+A password store is just a normal
+.Xr got 1
+repository with a worktree checkout out in
+.Pa ~/.password-store
+.Pq or at Ev PLASS_STORE .
+The only restriction is that a special file called
+.Pa .gpg-id
+must exist in the root of the work tree for most
+.Nm
+commands to work.
+.Pp
+For example, a got repository and password store can be initialized as
+follows:
+.Bd -literal -offset indent
+$ mkdir .password-store
+$ echo foo@example.com > .password-store/.gpg-id
+$ got init git/pass.git
+$ got import -r git/pass.git -m 'initial import' ~/.password-store
+$ got checkout -E ~/git/pass.git ~/.password-store
+.Ed
+.Pp
+see
+.Xr got 1
+for more information.
+.Pp
+Otherwise, if a repository already exists, a password store can be
+checked out as:
+.Bd -literal -offset indent
+$ got checkout ~/git/pass.git ~/.password-store
+.Ed
+.Pp
+To migrate from
+.Xr pass 1 ,
+just delete
+.Pa ~/.password-store
+and check out it again using
+.Xr got 1 .
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It Ev PLASS_CHARS
+default range of characters to use to generate passwords.
+.It Ev PLASS_GOT
+Path to the
+.Xr got 1
+executable.
+.It Ev PLASS_GPG
+Path to the
+.Xr gpg2 1
+executable.
+.It Ev PLASS_LENGTH
+Default length for the generated passwords.
+.It Ev PLASS_STORE
+Path to the password store directory tree.
+.It Ev PLASS_TOG
+Path to the
+.Xr tog 1
+executable.
+.El
+.Sh FILES
+.Bl -tag -width Ds
+.It Pa ~/.password-store
+Password store used by default.
+.It Pa ~/.password-store/.gpg-id
+File containing the gpg recipient used to encrypt the passwords.
+.El
+.Sh ACKNOWLEDGEMENTS
+.Nm
+was heavily influenced by
+.Xr pass 1
+in the design, but it's a completely different implementation with
+different tools involved.
+.Sh AUTHORS
+.An -nosplit
+The
+.Nm
+utility was written by
+.An Omar Polo Aq Mt op@omarpolo.com .
+.Sh CAVEATS
+.Nm
+.Cm find
+output format isn't designed to handle files containing newlines.
+Use
+.Xr find 1
+.Fl print0
+or similar if it's a concern.
+.Pp
+There isn't a
+.Cm init
+sub-command, the store initialization must be performed manually.
