@@ -43,7 +43,7 @@ GetOptions(
 	"h|?" => sub { pod2usage(0) },
     ) or pod2usage(1);
 
-my $cmd = shift or pod2usage(1);
+my $cmd = shift // 'find';
 
 my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
@@ -310,6 +310,8 @@ B<plass> - manage passwords
 B<plass> I<command> [-h] [arg ...]
 
 Valid subcommands are: cat, find, gen, got, mv, rm, tee, tog.
+
+If no I<command> is given, B<find> is assumed.
 
 =head1 DESCRIPTION
 
