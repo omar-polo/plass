@@ -25,15 +25,15 @@ use Pod::Usage;
 use File::Basename;
 use File::Find;
 
-my $store = $ENV{'PLASS_STORE'} || $ENV{'HOME'}.'/.password-store';
+my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
 
-my $got = $ENV{'PLASS_GOT'} || 'got';
-my $tog = $ENV{'PLASS_TOG'} || 'tog';
+my $got = $ENV{'PLASS_GOT'} // 'got';
+my $tog = $ENV{'PLASS_TOG'} // 'tog';
 
-my $gpg = $ENV{'PLASS_GPG'} || 'gpg2';
+my $gpg = $ENV{'PLASS_GPG'} // 'gpg2';
 my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to);
 
-my $default_chars = $ENV{'PLASS_CHARS'} || '!-~';
+my $default_chars = $ENV{'PLASS_CHARS'} // '!-~';
 my $default_length = $ENV{'PLASS_LENGTH'};
 if (!defined($default_length) || $default_length lt 0) {
 	$default_length = 32;
