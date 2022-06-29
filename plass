@@ -53,10 +53,11 @@ my $usage = "[-h] [command argument ...]";
 my $cmd;
 sub usage {
 	my $prog = basename $0;
-	if (defined($cmd)) {
+	if (defined($cmd) and defined($subcmd{$cmd})) {
 		say STDERR "Usage: $prog $cmd $usage";
 	} else {
 		say STDERR "Usage: $prog $usage";
+		say STDERR "unknown command $cmd" if defined($cmd);
 		say STDERR "commands: ", join(' ', sort(keys %subcmd));
 	}
 	exit 1;
