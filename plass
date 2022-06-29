@@ -400,7 +400,7 @@ checked out more simply as:
 	$ got checkout ~/git/pass.git ~/.password-store
 
 To migrate from pass(1), just delete I<~/.password-store> and checkout
-it again usign got(1).
+it again using got(1).
 
 =head1 ENVIRONMENT
 
