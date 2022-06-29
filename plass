@@ -107,8 +107,18 @@ sub readpass {
 	return $pass;
 }
 
+sub mkdirs {
+	my $dir = shift;
+	my $parent = dirname $dir;
+	mkdirs($parent) unless -d $parent || $parent eq '/';
+	mkdir $dir or die "mkdir $dir: $!"
+	    unless -d $dir;
+}
+
 sub writepass {
 	my ($file, $pass) = @_;
+
+	mkdirs(dirname $file);
 
 	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
 	    '-o', $file);
