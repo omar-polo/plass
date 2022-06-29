@@ -1,6 +1,7 @@
+VERSION=	0.1
 PROG=		plass
 MAN=		plass.1
-EXTRA=		README.md Makefile plass-version.mk plass-dist.txt
+EXTRA=		README.md Makefile plass-dist.txt
 
 INSTALL=	install
 INSTALL_MAN=	${INSTALL} -m 0444
@@ -13,30 +14,19 @@ MANDIR=		${PREFIX}/man
 TMPDIR=		/tmp
 STAGEDIR=	${TMPDIR}/plass-${VERSION}
 
-include plass-version.mk
-
-.PHONY: all dist install lint release
+.PHONY: all dist install-local install lint
 
 all:
 
+install-local:
+	${INSTALL_PROGRAM} ${PROG} ${HOME}/bin
+
 install:
-	@if [ '${RELEASE}' = 'Yes' ]; then \
-		echo ${INSTALL_PROGRAM} ${PROG} ${PREFIX}/bin; \
-		${INSTALL_PROGRAM} ${PROG} ${PREFIX}/bin; \
-		echo ${INSTALL_MAN} ${MAN} ${MANDIR}/man1/; \
-		${INSTALL_MAN} ${MAN} ${MANDIR}/man1/; \
-	else \
-		echo ${INSTALL_PROGRAM} ${PROG} ${HOME}/bin; \
-		${INSTALL_PROGRAM} ${PROG} ${HOME}/bin; \
-	fi
+	${INSTALL_PROGRAM} ${PROG} ${PREFIX}/bin
+	${INSTALL_MAN} ${MAN} ${MANDIR}/man1/
 
 lint:
 	man -Tlint -l ${MAN}
-
-release:
-	sed -i -e s/^RELEASE=No/RELEASE=Yes/ plass-version.mk
-	${MAKE} dist
-	sed -i -e s/^RELEASE=Yes/RELEASE=No/ plass-version.mk
 
 dist:
 	mkdir ${STAGEDIR}
