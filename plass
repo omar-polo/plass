@@ -161,19 +161,18 @@ sub passfind {
 }
 
 sub got {
+	# discard stdout
 	open my $fh, '-|', ($got, @_);
 	close($fh);
-	return !$?;
+	exit 1 if $?;
 }
 
 sub got_add {
-	got 'add', '-I', shift
-	    or exit 1;
+	got 'add', '-I', shift;
 }
 
 sub got_rm {
-	got 'remove', '-f', shift
-	    or exit 1;
+	got 'remove', '-f', shift;
 }
 
 sub got_ci {
