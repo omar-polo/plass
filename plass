@@ -51,7 +51,6 @@ my %subcmd = (
 	gen	=> [\&cmd_gen,		"[-c chars] [-l length] entry"],
 	got	=> [\&cmd_got,		"arguments ..."],
 	mv	=> [\&cmd_mv,		"from to"],
-	regen	=> [\&cmd_regen,	"[-c chars] [-l length] entry"],
 	rm	=> [\&cmd_rm,		"entry"],
 	tee	=> [\&cmd_tee,		"[-q] entry"],
 	tog	=> [\&cmd_tog,		"arguments ..."],
@@ -229,14 +228,14 @@ sub cmd_gen {
 
 	my $name = shift @ARGV;
 	my $file = name2file $name;
-	die "password already exists: $file\n" if -e $file;
+	my $renamed = -f $file;
 
 	my $pass = gen($chars, $length);
 
 	unless ($nop) {
 		writepass($file, $pass);
 		got_add $file;
-		got_ci "+$name";
+		got_ci($renamed ? "update $name" : "+$name");
 	}
 	say $pass unless $q;
 }
@@ -263,30 +262,8 @@ sub cmd_mv {
 	rename $pa, $pb or die "can't rename $a to $b: $!";
 
 	got_rm $pa;
-	got_add $pb;
+	got_add $pb or die "can't add $pb\n";
 	got_ci "mv $a $b";
-}
-
-sub cmd_regen {
-	my $chars = $default_chars;
-	my $length = $default_length;
-
-	GetOptions(
-		'c=s' => sub { $chars = $_[1] },
-		'h|?' => \&usage,
-		'l=i' => sub { $length = $_[1] },
-	    ) or usage;
-	usage if @ARGV ne 1;
-
-	my $name = shift @ARGV;
-	my $file = name2file $name;
-	die "password doesn't exist" unless -f $file;
-
-	my $pass = gen($chars, $length);
-	writepass($file, $pass);
-
-	got_add $file;
-	got_ci "regen $name";
 }
 
 sub cmd_rm {
@@ -334,7 +311,7 @@ B<plass> - manage passwords
 
 B<plass> I<command> [-h] [arg ...]
 
-Valid subcommands are: cat, find, gen, got, mv, regen, rm, tee, tog.
+Valid subcommands are: cat, find, gen, got, mv, rm, tee, tog.
 
 =head1 DESCRIPTION
 
@@ -381,10 +358,6 @@ I<arguments>.
 
 Rename a password entry, doesn't work with directories.  I<from> must
 exist and I<to> mustn't.
-
-=item B<regen> [B<-c> I<chars>] [B<-l> I<length>] I<entry>
-
-Like B<gen> but re-generates a password in-place.
 
 =item B<rm> I<entry>
 
