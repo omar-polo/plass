@@ -51,7 +51,6 @@ my %subcmd = (
 	gen	=> [\&cmd_gen,		"[-c chars] [-l length] entry"],
 	got	=> [\&cmd_got,		"arguments ..."],
 	mv	=> [\&cmd_mv,		"from to"],
-	oneshot => [\&cmd_oneshot,	"[-c chars] [-l length]"],
 	regen	=> [\&cmd_regen,	"[-c chars] [-l length] entry"],
 	rm	=> [\&cmd_rm,		"entry"],
 	tee	=> [\&cmd_tee,		"[-q] entry"],
@@ -215,11 +214,15 @@ sub cmd_find {
 sub cmd_gen {
 	my $chars = $default_chars;
 	my $length = $default_length;
+	my $nop;
+	my $q;
 
 	GetOptions(
 		'c=s' => sub { $chars = $_[1] },
 		'h|?' => \&usage,
 		'l=i' => sub { $length = $_[1] },
+		'n'   => \$nop,
+		'q'   => \$q,
 	    ) or usage;
 	usage if @ARGV ne 1;
 
@@ -228,10 +231,13 @@ sub cmd_gen {
 	die "password already exists: $file\n" if -e $file;
 
 	my $pass = gen($chars, $length);
-	writepass($file, $pass);
 
-	got_add $file;
-	got_ci "+$name";
+	unless ($nop) {
+		writepass($file, $pass);
+		got_add $file;
+		got_ci "+$name";
+	}
+	say $pass unless $q;
 }
 
 sub cmd_got {
@@ -258,20 +264,6 @@ sub cmd_mv {
 	got_rm $pa;
 	got_add $pb;
 	got_ci "mv $a $b";
-}
-
-sub cmd_oneshot {
-	my $chars = $default_chars;
-	my $length = $default_length;
-
-	GetOptions(
-		'c=s' => sub { $chars = $_[1] },
-		'h|?' => \&usage,
-		'l=i' => sub { $length = $_[1] },
-	    ) or usage;
-	usage if @ARGV ne 0;
-
-	say gen($chars, $length);
 }
 
 sub cmd_regen {
@@ -341,8 +333,7 @@ B<plass> - manage passwords
 
 B<plass> I<command> [-h] [arg ...]
 
-Valid subcommands are: cat, find, gen, got, mv, oneshot, regen, rm,
-tee, tog.
+Valid subcommands are: cat, find, gen, got, mv, regen, rm, tee, tog.
 
 =head1 DESCRIPTION
 
@@ -369,12 +360,16 @@ Decrypt and print the passwords of the given I<entries>.
 Print one per line all the entries of the store, optionally filtered
 by the given I<pattern>.
 
-=item B<gen> [B<-c> I<chars>] [B<-l> I<length>] I<entry>
+=item B<gen> [B<-nq>] [B<-c> I<chars>] [B<-l> I<length>] I<entry>
 
 Generate and persist a password for the given I<entry> in the store.
 B<-c> can be used to control the characters allowed in the password
 (by default I<!-~> i.e. all the printable ASCII character) and B<-l>
 the length (32 by default.)
+
+Unless B<-q> is provided, plass prints the generated password.
+
+If the B<-n> option is given, plass won't persist the password.
 
 =item B<got> I<arguments ...>
 
@@ -385,11 +380,6 @@ I<arguments>.
 
 Rename a password entry, doesn't work with directories.  I<from> must
 exist and I<to> mustn't.
-
-=item B<oneshot> [B<-c> I<chars>] [B<-l> I<length>]
-
-Like B<gen> but prints the the generated password instead of persist
-it.
 
 =item B<regen> [B<-c> I<chars>] [B<-l> I<length>] I<entry>
 
