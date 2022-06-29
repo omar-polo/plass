@@ -34,7 +34,7 @@ my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to --use-agent);
 
 my $default_chars = $ENV{'PLASS_CHARS'} // '!-~';
 my $default_length = $ENV{'PLASS_LENGTH'};
-if (!defined($default_length) || $default_length lt 0) {
+if (!defined($default_length) || $default_length <= 0) {
 	$default_length = 32;
 }
 
@@ -90,7 +90,7 @@ sub gen {
 	open(my $fh, '<:raw', '/dev/random')
 	    or die "can't open /dev/random: $!";
 	my $l = $length;
-	while ($l gt 0) {
+	while ($l >= 0) {
 		read($fh, my $t, $length * 4)
 		    or die "failed to read /dev/random: $!";
 		$t =~ s/[^$chars]//g;
@@ -193,7 +193,7 @@ sub got_ci {
 	my $pid = fork;
 	die "failed to fork: $!" unless defined $pid;
 
-	if ($pid ne 0) {
+	if ($pid != 0) {
 		wait;
 		die "failed to commit changes" if $?;
 		return;
@@ -221,7 +221,7 @@ sub cmd_cat {
 
 sub cmd_find {
 	GetOptions('h|?' => \&usage) or usage;
-	usage if @ARGV gt 1;
+	usage if @ARGV > 1;
 
 	map { say $_ } passfind(shift @ARGV);
 }
@@ -239,7 +239,7 @@ sub cmd_gen {
 		'n'   => \$nop,
 		'q'   => \$q,
 	    ) or usage;
-	usage if @ARGV ne 1;
+	usage if @ARGV != 1;
 
 	my $name = shift @ARGV;
 	my $file = name2file $name;
@@ -262,7 +262,7 @@ sub cmd_got {
 # TODO: handle moving directories?
 sub cmd_mv {
 	GetOptions('h|?' => \&usage) or usage;
-	usage if @ARGV ne 2;
+	usage if @ARGV != 2;
 
 	my $a = shift @ARGV;
 	my $b = shift @ARGV;
@@ -300,7 +300,7 @@ sub cmd_tee {
 		'h|?' => \&usage,
 		'q'   => \$q,
 	    ) or usage;
-	usage if @ARGV ne 1;
+	usage if @ARGV != 1;
 
 	my $name = shift @ARGV;
 	my $file = name2file $name;
