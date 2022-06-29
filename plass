@@ -163,15 +163,17 @@ sub passfind {
 sub got {
 	open my $fh, '-|', ($got, @_);
 	close($fh);
-	die "\"@_\" failed" if $? != 0;
+	return !$?;
 }
 
 sub got_add {
-	got 'add', '-I', shift;
+	got 'add', '-I', shift
+	    or exit 1;
 }
 
 sub got_rm {
-	got 'remove', '-f', shift;
+	got 'remove', '-f', shift
+	    or exit 1;
 }
 
 sub got_ci {
