@@ -49,7 +49,7 @@ my %subcmd = (
 	tog	=> [\&cmd_tog,		"args ..."],
     );
 
-my $usage = "[-h] [command argument ...]";
+my $usage = "[-h] command [argument ...]";
 my $cmd;
 sub usage {
 	my $prog = basename $0;
