@@ -20,18 +20,16 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl h
-.Oo
-.Cm command
-.Ar argument ...
-.Oc
+.Ar command
+.Op Ar argument ...
 .Sh DESCRIPTION
 .Nm
 is a simple password manager.
-It manages paswords store in a directory tree rooted at
+It manages paswords stored in a directory tree rooted at
 .Pa ~/.password-store
 .Pq or at Ev PLASS_STORE ,
 where every password is a single file encrypted with
-.Xr gpg2 1 .
+.Xr gpg 1 .
 .Pp
 Password entries can be referenced using the path relative to the
 store directory.
@@ -47,7 +45,8 @@ The following commands are available:
 .Bl -tag -width Ds
 .It Cm cat Ar entries ...
 Decrypt and print the content of the given
-.Ar entries .
+.Ar entries
+in the given order.
 .It Cm find Op Ar pattern
 Print one per line all the entries of the store, optionally filtered
 by the given
@@ -91,10 +90,9 @@ from the store.
 .It Cm tee Oo Fl q Oc Ar entry
 Prompt for a password and persist it into the store under the given
 .Ar entry
-name and the print it again on the standard output.
-If the
+name and the print it again on the standard output unless the
 .Fl q
-option is given, nothing is printed to standard output.
+option is given.
 .It Cm tog Ar arguments ...
 Execute
 .Xr tog 1
@@ -149,7 +147,7 @@ Path to the
 executable.
 .It Ev PLASS_GPG
 Path to the
-.Xr gpg2 1
+.Xr gpg 1
 executable.
 .It Ev PLASS_LENGTH
 Default length for the generated passwords.
