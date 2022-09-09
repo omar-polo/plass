@@ -116,10 +116,10 @@ commands to work.
 For example, a got repository and password store can be initialized as
 follows:
 .Bd -literal -offset indent
-$ mkdir .password-store
-$ echo foo@example.com > .password-store/.gpg-id
-$ got init git/pass.git
-$ got import -r git/pass.git -m 'initial import' ~/.password-store
+$ mkdir ~/.password-store
+$ echo foo@example.com > ~/.password-store/.gpg-id
+$ gotadmin init ~/git/pass.git
+$ got import -r ~/git/pass.git -m 'initial import' ~/.password-store
 $ got checkout -E ~/git/pass.git ~/.password-store
 .Ed
 .Pp
