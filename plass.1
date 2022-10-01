@@ -51,7 +51,7 @@ in the given order.
 Print one per line all the entries of the store, optionally filtered
 by the given
 .Ar pattern .
-.It Cm gen Oo Fl nq Oc Oo Fl c Ar chars Oc Oo Fl l Ar length Oc Ar entry
+.It Cm gen Oo Fl nq Oc Oo Fl c Ar chars Oc Oo Fl l Ar length Oc Op Ar entry
 Generate and persist a password for the given
 .Ar entry
 in the store.
@@ -71,7 +71,9 @@ flag is provided,
 prints the generated password.
 If the
 .Fl n
-flag is given, the password won't be persisted.
+flag is given the password won't be persisted and the
+.Ar entry
+argument is optional.
 .It Cm got Ar arguments
 Execute
 .Xr got 1

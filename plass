@@ -239,19 +239,22 @@ sub cmd_gen {
 		'n'   => \$nop,
 		'q'   => \$q,
 	    ) or usage;
+
+	my $pass = gen($chars, $length);
+	if ($nop) {
+		say $pass;
+		return;
+	}
+
 	usage if @ARGV != 1;
 
 	my $name = shift @ARGV;
 	my $file = name2file $name;
 	my $renamed = -f $file;
 
-	my $pass = gen($chars, $length);
-
-	unless ($nop) {
-		writepass($file, $pass);
-		got_add $file;
-		got_ci($renamed ? "update $name" : "+$name");
-	}
+	writepass($file, $pass);
+	got_add $file;
+	got_ci($renamed ? "update $name" : "+$name");
 	say $pass unless $q;
 }
 
