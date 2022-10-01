@@ -25,33 +25,38 @@
 .Sh DESCRIPTION
 .Nm
 is a simple password manager.
-It manages paswords stored in a directory tree rooted at
-.Pa ~/.password-store
-.Pq or at Ev PLASS_STORE ,
-where every password is a single file encrypted with
+Passwords are stored as a directory tree where every password is a
+file encrypted with
 .Xr gpg 1 .
+.Pp
+A password store is a
+.Xr got 1
+repository with a worktree checked out at
+.Pa ~/.password-store
+.Pq or Ev PLASS_STORE .
+The only restriction is that a special file called
+.Pa .gpg-id
+containing the GPG recipient must exist in the root of the directory tree
+for most
+.Nm
+commands to work.
 .Pp
 Password entries can be referenced using the path relative to the
 store directory.
-The extension
+The file extension
 .Dq \&.gpg
 is optional.
-.Pp
-The whole store is supposed to be managed by the
-.Xr got 1
-version control system.
 .Pp
 The following commands are available:
 .Bl -tag -width Ds
 .It Cm cat Ar entries ...
-Decrypt and print the content of the given
+Decrypt and print the content of
 .Ar entries
 in the given order.
 .It Cm find Op Ar pattern
-Print one per line all the entries of the store, optionally filtered
-by the given
+Print the entries of the store one per line, optionally filtered by
 .Ar pattern .
-.It Cm gen Oo Fl nq Oc Oo Fl c Ar chars Oc Oo Fl l Ar length Oc Op Ar entry
+.It Cm gen Oo Fl nq Oc Oo Fl c Ar chars Oc Oo Fl l Ar length Oc Ar entry
 Generate and persist a password for the given
 .Ar entry
 in the store.
@@ -66,9 +71,7 @@ the length
 .Pq 32 by default .
 Unless the
 .Fl q
-flag is provided,
-.Nm
-prints the generated password.
+flag is provided, print the generated password.
 If the
 .Fl n
 flag is given the password won't be persisted and the
@@ -77,7 +80,7 @@ argument is optional.
 .It Cm mv Ar from Ar to
 Rename a password entry, doesn't work with directories.
 .Ar from
-must exists and
+must exist and
 .Ar to
 mustn't.
 .It Cm rm Ar entries ...
@@ -91,44 +94,6 @@ name and the print it again on the standard output unless the
 .Fl q
 option is given.
 .El
-.Sh CREATING A PASSWORD STORE
-A password store is just a normal
-.Xr got 1
-repository with a worktree checkout out in
-.Pa ~/.password-store
-.Pq or at Ev PLASS_STORE .
-The only restriction is that a special file called
-.Pa .gpg-id
-must exist in the root of the work tree for most
-.Nm
-commands to work.
-.Pp
-For example, a got repository and password store can be initialized as
-follows:
-.Bd -literal -offset indent
-$ mkdir ~/.password-store
-$ echo foo@example.com > ~/.password-store/.gpg-id
-$ gotadmin init ~/git/pass.git
-$ got import -r ~/git/pass.git -m 'initial import' ~/.password-store
-$ got checkout -E ~/git/pass.git ~/.password-store
-.Ed
-.Pp
-see
-.Xr got 1
-for more information.
-.Pp
-Otherwise, if a repository already exists, a password store can be
-checked out as:
-.Bd -literal -offset indent
-$ got checkout ~/git/pass.git ~/.password-store
-.Ed
-.Pp
-To migrate from
-.Xr pass 1 ,
-just delete
-.Pa ~/.password-store
-and check out it again using
-.Xr got 1 .
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
 .It Ev PLASS_CHARS
@@ -151,14 +116,43 @@ Path to the password store directory tree.
 .It Pa ~/.password-store
 Password store used by default.
 .It Pa ~/.password-store/.gpg-id
-File containing the gpg recipient used to encrypt the passwords.
+File containing the GPG recipient used to encrypt the passwords.
 .El
-.Sh ACKNOWLEDGEMENTS
+.Sh EXAMPLES
+A got repository and password store can be initialized as follows:
+.Bd -literal -offset indent
+$ mkdir ~/.password-store
+$ echo foo@example.com > ~/.password-store/.gpg-id
+$ gotadmin init ~/git/pass.git
+$ got import -r ~/git/pass.git -m 'initial import' ~/.password-store
+$ got checkout -E ~/git/pass.git ~/.password-store
+.Ed
+.Pp
+see
+.Xr got 1
+for more information.
+.Pp
+To migrate from
+.Xr pass 1 ,
+delete
+.Pa ~/.password-store
+and check out it again using
+.Xr got 1 .
+.Pp
+To generate a temporary random password use
+.Bd -literal -offset indent
+$ plass gen -n
+.Ed
+.Sh SEE ALSO
+.Xr got 1 ,
+.Xr gpg 1 ,
+.Xr pass 1
+.Sh HISTORY
 .Nm
 was heavily influenced by
 .Xr pass 1
-in the design, but it's a completely different implementation with
-different tools involved.
+in the design, but it's a different implementation that prioritizes ease
+of use and composability.
 .Sh AUTHORS
 .An -nosplit
 The
@@ -173,6 +167,10 @@ Use
 .Xr find 1
 .Fl print0
 or similar if it's a concern.
+.Pp
+.Nm
+.Cm mv
+is not able to move directory trees, only file entries.
 .Pp
 There isn't a
 .Cm init
