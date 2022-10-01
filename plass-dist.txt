@@ -1,6 +1,0 @@
-
-Makefile
-README.md
-plass
-plass-dist.txt
-plass.1
