@@ -27,7 +27,6 @@ use File::Find;
 my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
 
 my $got = $ENV{'PLASS_GOT'} // 'got';
-my $tog = $ENV{'PLASS_TOG'} // 'tog';
 
 my $gpg = $ENV{'PLASS_GPG'} // 'gpg';
 my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to --use-agent);
@@ -42,11 +41,9 @@ my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
 	find	=> [\&cmd_find,		"[pattern]"],
 	gen	=> [\&cmd_gen,		"[-nq] [-c chars] [-l length] entry"],
-	got	=> [\&cmd_got,		"args ..."],
 	mv	=> [\&cmd_mv,		"from to"],
 	rm	=> [\&cmd_rm,		"entries..."],
 	tee	=> [\&cmd_tee,		"[-q] entry"],
-	tog	=> [\&cmd_tog,		"args ..."],
     );
 
 my $usage = "[-h] command [argument ...]";
@@ -258,10 +255,6 @@ sub cmd_gen {
 	say $pass unless $q;
 }
 
-sub cmd_got {
-	exec $got, @ARGV;
-}
-
 # TODO: handle moving directories?
 sub cmd_mv {
 	GetOptions('h|?' => \&usage) or usage;
@@ -314,8 +307,4 @@ sub cmd_tee {
 	got_add $file;
 	got_ci (-f $file ? "update $name" : "+$name");
 	say $pass unless $q;
-}
-
-sub cmd_tog {
-	exec $tog, @ARGV;
 }
