@@ -10,6 +10,7 @@ INSTALL_MAN=	${INSTALL} -m 0444
 INSTALL_PROGRAM=${INSTALL} -m 0555
 
 PREFIX=		/usr/local
+BINDIR=		${PREFIX}/bin
 MANDIR=		${PREFIX}/man
 
 .PHONY: all dist install-local install lint
@@ -20,8 +21,10 @@ install-local:
 	${INSTALL_PROGRAM} ${PROG} ${HOME}/bin
 
 install:
-	${INSTALL_PROGRAM} ${PROG} ${PREFIX}/bin
-	${INSTALL_MAN} ${MAN} ${MANDIR}/man1/
+	mkdir -p ${DESTDIR}${BINDIR}
+	mkdir -p ${DESTDIR}${MANDIR}/man1
+	${INSTALL_PROGRAM} ${PROG} ${DESTDIR}${BINDIR}
+	${INSTALL_MAN} ${MAN} ${DESTDIR}${MANDIR}/man1/
 
 lint:
 	man -Tlint -l ${MAN}
