@@ -1,18 +1,16 @@
 VERSION=	0.1
 PROG=		plass
+DISTNAME=	${PROG}-${VERSION}
 MAN=		plass.1
-EXTRA=		README.md Makefile plass-dist.txt
+EXTRA=		README.md Makefile
 
 INSTALL=	install
+INSTALL_DATA=	${INSTALL} -m 0644
 INSTALL_MAN=	${INSTALL} -m 0444
 INSTALL_PROGRAM=${INSTALL} -m 0555
 
 PREFIX=		/usr/local
 MANDIR=		${PREFIX}/man
-
-# for dist
-TMPDIR=		/tmp
-STAGEDIR=	${TMPDIR}/plass-${VERSION}
 
 .PHONY: all dist install-local install lint
 
@@ -28,12 +26,14 @@ install:
 lint:
 	man -Tlint -l ${MAN}
 
-dist:
-	mkdir ${STAGEDIR}
-	pax -rw ${PROG} ${MAN} ${EXTRA} ${STAGEDIR}
-	tar -C ${TMPDIR} -vzcf plass-${VERSION}.tar.gz plass-${VERSION} | \
-		sed -E 's,^plass-${VERSION}/?,,' | \
-		sort -u > plass-dist.txt.new
-	rm -rf ${STAGEDIR}
-	diff -u plass-dist.txt{,.new}
-	rm plass-dist.txt.new
+dist: ${DISTNAME}.sha256
+
+${DISTNAME}.sha256: ${DISTNAME}.tar.gz
+	sha256 ${DISTNAME}.tar.gz > $@
+
+${DISTNAME}.tar.gz: ${PROG} ${MAN} ${EXTRA}
+	mkdir -p .dist/${DISTNAME}
+	${INSTALL_DATA} ${MAN} ${EXTRA} .dist/${DISTNAME}
+	${INSTALL_PROGRAM} ${PROG} .dist/${DISTNAME}
+	cd .dist && tar zcf ../$@ ${DISTNAME}
+	rm -rf .dist
