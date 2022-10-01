@@ -29,6 +29,9 @@ install:
 lint:
 	man -Tlint -l ${MAN}
 
+plass.1.html: plass.1
+	man -Thtml -Ostyle=mandoc.css -l plass.1 > $@
+
 dist: ${DISTNAME}.sha256
 
 ${DISTNAME}.sha256: ${DISTNAME}.tar.gz
