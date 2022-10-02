@@ -145,6 +145,13 @@ To generate a temporary random password use
 .Bd -literal -offset indent
 $ plass gen -n
 .Ed
+.Pp
+Display the entries matching
+.Sq key
+arranged comfortably for reading in a terminal window:
+.Bd -literal -offset indent
+$ plass find key | rs
+.Ed
 .Sh SEE ALSO
 .Xr got 1 ,
 .Xr gpg 1 ,
