@@ -11,7 +11,7 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.Dd October 2, 2022
+.Dd October 5, 2022
 .Dt PLASS 1
 .Os
 .Sh NAME
@@ -46,6 +46,14 @@ store directory.
 The file extension
 .Dq \&.gpg
 is optional.
+.Pp
+.Nm
+provides global and command-specific options.
+Global options must precede the command name, and are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Display usage information and exit immediately.
+.El
 .Pp
 The following commands are available:
 .Bl -tag -width Ds
