@@ -19,8 +19,8 @@ casual use, an `install-local' target that only copies the script in
 
 At the moment plass is completely compatible with pass, the same gpg
 commands are used to decrypt and encrypt the passwords entries.  In
-the future, I'd like to switch the encryption tool to either signify
-or age.
+the future, I'd like to switch the encryption tool to something
+different from gpg.
 
 
 ## License
