@@ -1,8 +1,11 @@
 VERSION=	0.1
-PROG=		plass
-DISTNAME=	${PROG}-${VERSION}
-MAN=		plass.1
-EXTRA=		README.md Makefile
+DISTNAME=	plass-${VERSION}
+PROGS=		plass totp
+MANS=		plass.1 totp.1
+EXTRA=		README.md Makefile totp.c
+
+CFLAGS=		-Wall -Wextra
+LDFLAGS=	-lcrypto
 
 INSTALL=	install
 INSTALL_DATA=	${INSTALL} -m 0644
@@ -13,21 +16,27 @@ PREFIX=		/usr/local
 BINDIR=		${PREFIX}/bin
 MANDIR=		${PREFIX}/man
 
-.PHONY: all dist install-local install lint
+.PHONY: all clean dist install-local install lint
 
-all:
+all: ${PROGS}
 
-install-local:
-	${INSTALL_PROGRAM} ${PROG} ${HOME}/bin
+clean:
+	rm -f *.o totp
 
-install:
+totp: totp.o
+	${CC} -o $@ totp.o ${LDFLAGS}
+
+install-local: ${PROGS}
+	${INSTALL_PROGRAM} ${PROGS} ${HOME}/bin
+
+install: ${PROGS}
 	mkdir -p ${DESTDIR}${BINDIR}
 	mkdir -p ${DESTDIR}${MANDIR}/man1
-	${INSTALL_PROGRAM} ${PROG} ${DESTDIR}${BINDIR}
-	${INSTALL_MAN} ${MAN} ${DESTDIR}${MANDIR}/man1/
+	${INSTALL_PROGRAM} ${PROGS} ${DESTDIR}${BINDIR}
+	${INSTALL_MAN} ${MANS} ${DESTDIR}${MANDIR}/man1/
 
 lint:
-	man -Tlint -l ${MAN}
+	man -Tlint -l ${MANS}
 
 plass.1.html: plass.1
 	man -Thtml -Ostyle=mandoc.css -l plass.1 > $@
@@ -37,9 +46,9 @@ dist: ${DISTNAME}.sha256
 ${DISTNAME}.sha256: ${DISTNAME}.tar.gz
 	sha256 ${DISTNAME}.tar.gz > $@
 
-${DISTNAME}.tar.gz: ${PROG} ${MAN} ${EXTRA}
+${DISTNAME}.tar.gz: ${PROGS} ${MANS} ${EXTRA}
 	mkdir -p .dist/${DISTNAME}
-	${INSTALL_DATA} ${MAN} ${EXTRA} .dist/${DISTNAME}
-	${INSTALL_PROGRAM} ${PROG} .dist/${DISTNAME}
+	${INSTALL_DATA} ${MANS} ${EXTRA} .dist/${DISTNAME}
+	${INSTALL_PROGRAM} plass .dist/${DISTNAME}
 	cd .dist && tar zcf ../$@ ${DISTNAME}
 	rm -rf .dist
