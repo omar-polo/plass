@@ -16,7 +16,7 @@ PREFIX=		/usr/local
 BINDIR=		${PREFIX}/bin
 MANDIR=		${PREFIX}/man
 
-.PHONY: all clean dist install-local install lint
+.PHONY: all clean dist install-local install lint mans
 
 all: ${PROGS}
 
@@ -40,6 +40,11 @@ lint:
 
 plass.1.html: plass.1
 	man -Thtml -Ostyle=mandoc.css -l plass.1 > $@
+
+totp.1.html: totp.1
+	man -Thtml -Ostyle=mandoc.css -l totp.1 > $@
+
+mans: plass.1.html totp.1.html
 
 dist: ${DISTNAME}.sha256
 
