@@ -5,22 +5,21 @@ with a smaller and (IMHO) cleaner interface.  It doesn't have fancy
 trees nor colors in the output; the absence of these is considered a
 feature.
 
-In addition, plass uses got(1) to manage the password store (but can
-be easily patched to use git(1) if desired.)
+In addition, plass uses got(1) to manage the password store and bundles
+a small utility to generate TOTP codes: totp(1).
 
-To install it, just execute
+To build and install it, just execute
 
+	$ make
 	$ doas make install
 
-and it'll install the script and the manpage in the correct place.  For
-casual use, an `install-local' target that only copies the script in
-~/bin is provided.
+For casual use, an `install-local` target that only copies the programs
+in ~/bin is provided.
 
 
-At the moment plass is completely compatible with pass, the same gpg
-commands are used to decrypt and encrypt the passwords entries.  In
-the future, I'd like to switch the encryption tool to something
-different from gpg.
+At the moment plass is completely compatible with pass, but in the
+future I'd like to switch the encryption tool to something different to
+gpg.
 
 
 ## License
