@@ -296,7 +296,7 @@ sub cmd_tee {
 
 	my $pass = "";
 	$pass .= $_ while <STDIN>;
-	die "No content" if $pass eq "";
+	die "No content!\n" if $pass eq "";
 
 	writepass($file, $pass);
 
