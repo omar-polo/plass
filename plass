@@ -99,15 +99,6 @@ sub gen {
 	return substr($pass, 0, $length);
 }
 
-sub readpass {
-	# todo some stty black magic to avoid echo
-	print shift if -t;
-	my $pass = <>;
-	die "failed to read stdin: $!" unless defined($pass);
-	chomp $pass;
-	return $pass;
-}
-
 sub mkdirs {
 	my $dir = shift;
 	my $parent = dirname $dir;
@@ -128,7 +119,7 @@ sub writepass {
 	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
 	    '-o', '-');
 	open my $fh, '|-', @args;
-	say $fh "$pass";
+	print $fh "$pass";
 	close($fh);
 	my $ok = !$?;
 
@@ -237,7 +228,7 @@ sub cmd_gen {
 		'q'   => \$q,
 	    ) or usage;
 
-	my $pass = gen($chars, $length);
+	my $pass = gen($chars, $length) . "\n";
 	if ($nop) {
 		say $pass;
 		return;
@@ -301,10 +292,15 @@ sub cmd_tee {
 	my $name = shift @ARGV;
 	my $file = name2file $name;
 
-	my $pass = readpass "Enter the password: ";
+	my $msg = -f $file ? "update $name" : "+$name";
+
+	my $pass = "";
+	$pass .= $_ while <STDIN>;
+	die "No content" if $pass eq "";
+
 	writepass($file, $pass);
 
 	got_add $file;
-	got_ci (-f $file ? "update $name" : "+$name");
-	say $pass unless $q;
+	got_ci $msg;
+	print $pass unless $q;
 }
