@@ -1,0 +1,62 @@
+.\" Copyright (c) 2022 Omar Polo <op@omarpolo.com>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.Dd October 20, 2022
+.Dt TOTP 1
+.Os
+.Sh NAME
+.Nm totp
+.Nd time-based one time password generator
+.Sh SYNOPSIS
+.Nm
+.No < Ns Ar secret
+.Sh DESCRIPTION
+.Nm
+is a time-based one time password generator
+.Pq TOTP .
+It reads a secret from standard input and prints the generated password,
+a numeric code, to standard output.
+The secret is usually provided by the authenticator
+.Pq for e.g.\& a website .
+Blanks in the secret string are ignored, but only one line is read.
+.Pp
+.Nm
+uses a period of 30 seconds and generates six digits long codes.
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+.Nm
+is meant to be used with
+.Xr plass 1
+or similar application: the secret is stored safely in the password
+store and then given to
+.Nm
+using a pipe:
+.Bd -literal -offset indent
+$ plass cat 2fa/codeberg/op | totp
+722524
+.Ed
+.Sh SEE ALSO
+.Xr plass 1
+.Sh STANDARDS
+.Nm
+follows the algorithm outlined in RFC 6238
+.Dq TOTP: Time-Based One-Time Password Algorithm
+and uses the base32 encoding as defined in RFC 3548
+.Dq The Base16, Base32, and Base64 Data Encodings .
+.Sh AUTHORS
+.An -nosplit
+The
+.Nm
+utility was written by
+.An Omar Polo Aq Mt op@omarpolo.com .
