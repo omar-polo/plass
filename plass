@@ -147,12 +147,12 @@ sub passfind {
 				$File::Find::prune = 1;
 				return;
 			}
-
-			return if defined($pattern) && ! m/$pattern/;
 			return unless -f && m,.gpg$,;
 
 			s,^$store/*,,;
 			s,.gpg$,,;
+
+			return if defined($pattern) && ! m/$pattern/;
 			push @entries, $_;
 		},
 		no_chdir => 1,
