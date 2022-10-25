@@ -64,19 +64,19 @@ b32c(unsigned char c)
 }
 
 static size_t
-b32decode(char *s, size_t slen, char *q, size_t qlen)
+b32decode(const char *s, char *q, size_t qlen)
 {
 	int	 i, val[8];
 	char	*t = q;
 
-	while (slen > 0) {
+	while (*s != '\0') {
 		memset(val, 0, sizeof(val));
 		for (i = 0; i < 8; ++i) {
-			if (slen == 0)
+			if (*s == '\0')
 				break;
 			if ((val[i] = b32c(*s)) == -1)
 				return (0);
-			s++, slen--;
+			s++;
 		}
 
 		if (qlen < 5) {
@@ -142,7 +142,7 @@ main(int argc, char **argv)
 	if (linelen < 1)
 		errx(1, "no secret provided");
 
-	if ((buflen = b32decode(line, linelen, buf, sizeof(buf))) == 0)
+	if ((buflen = b32decode(line, buf, sizeof(buf))) == 0)
 		err(1, "can't base32 decode the secret");
 
 	ct = htobe64(time(NULL) / 30);
