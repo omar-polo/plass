@@ -79,17 +79,17 @@ sub name2file {
 	return $f;
 }
 
-# tr -cd -- $chars < /dev/random | dd bs=$len count=1 status=none
+# tr -cd -- $chars < /dev/urandom | dd bs=$len count=1 status=none
 sub gen {
 	my ($chars, $length) = @_;
 	my $pass = "";
 
-	open(my $fh, '<:raw', '/dev/random')
-	    or die "can't open /dev/random: $!";
+	open(my $fh, '<:raw', '/dev/urandom')
+	    or die "can't open /dev/urandom: $!";
 	my $l = $length;
 	while ($l >= 0) {
 		read($fh, my $t, $length * 4)
-		    or die "failed to read /dev/random: $!";
+		    or die "failed to read /dev/urandom: $!";
 		$t =~ s/[^$chars]//g;
 		$l -= length($t);
 		$pass .= $t;
