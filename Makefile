@@ -1,7 +1,7 @@
 VERSION=	0.2
 DISTNAME=	plass-${VERSION}
-PROGS=		plass totp
-MANS=		plass.1 totp.1
+PROGS=		plass pwg totp
+MANS=		plass.1 pwg.1 totp.1
 EXTRA=		README.md Makefile totp.c
 
 CFLAGS=		-Wall -Wextra
