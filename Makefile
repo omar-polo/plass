@@ -36,7 +36,7 @@ install: ${PROGS}
 	${INSTALL_MAN} ${MANS} ${DESTDIR}${MANDIR}/man1/
 
 lint:
-	man -Tlint -l ${MANS}
+	man -Tlint -Wstyle -l ${MANS}
 
 plass.1.html: plass.1
 	man -Thtml -Ostyle=mandoc.css -l plass.1 > $@
