@@ -31,16 +31,9 @@ my $got = $ENV{'PLASS_GOT'} // 'got';
 my $gpg = $ENV{'PLASS_GPG'} // 'gpg';
 my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to --use-agent);
 
-my $default_chars = $ENV{'PLASS_CHARS'} // '!-~';
-my $default_length = $ENV{'PLASS_LENGTH'};
-if (!defined($default_length) || $default_length <= 0) {
-	$default_length = 32;
-}
-
 my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
 	find	=> [\&cmd_find,		"[pattern]"],
-	gen	=> [\&cmd_gen,		"[-nq] [-c chars] [-l length] entry"],
 	mv	=> [\&cmd_mv,		"from to"],
 	rm	=> [\&cmd_rm,		"entries..."],
 	tee	=> [\&cmd_tee,		"[-q] entry"],
@@ -77,26 +70,6 @@ sub name2file {
 	my $f = shift;
 	$f .= ".gpg" unless $f =~ m,\.gpg$,;
 	return $f;
-}
-
-# tr -cd -- $chars < /dev/urandom | dd bs=$len count=1 status=none
-sub gen {
-	my ($chars, $length) = @_;
-	my $pass = "";
-
-	open(my $fh, '<:raw', '/dev/urandom')
-	    or die "can't open /dev/urandom: $!";
-	my $l = $length;
-	while ($l >= 0) {
-		read($fh, my $t, $length * 4)
-		    or die "failed to read /dev/urandom: $!";
-		$t =~ s/[^$chars]//g;
-		$l -= length($t);
-		$pass .= $t;
-	}
-	close($fh);
-
-	return substr($pass, 0, $length);
 }
 
 sub mkdirs {
@@ -212,38 +185,6 @@ sub cmd_find {
 	usage if @ARGV > 1;
 
 	map { say $_ } passfind(shift @ARGV);
-}
-
-sub cmd_gen {
-	my $chars = $default_chars;
-	my $length = $default_length;
-	my $nop;
-	my $q;
-
-	GetOptions(
-		'c=s' => sub { $chars = $_[1] },
-		'h|?' => \&usage,
-		'l=i' => sub { $length = $_[1] },
-		'n'   => \$nop,
-		'q'   => \$q,
-	    ) or usage;
-
-	my $pass = gen($chars, $length) . "\n";
-	if ($nop) {
-		say $pass;
-		return;
-	}
-
-	usage if @ARGV != 1;
-
-	my $name = shift @ARGV;
-	my $file = name2file $name;
-	my $renamed = -f $file;
-
-	writepass($file, $pass);
-	got_add $file;
-	got_ci($renamed ? "update $name" : "+$name");
-	say $pass unless $q;
 }
 
 # TODO: handle moving directories?

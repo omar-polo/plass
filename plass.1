@@ -33,7 +33,6 @@ A password store is a
 .Xr got 1
 repository with a worktree checked out at
 .Pa ~/.password-store
-.Pq or Ev PLASS_STORE .
 The only restriction is that a special file called
 .Pa .gpg-id
 containing the GPG recipient must exist in the root of the directory tree
@@ -64,27 +63,6 @@ in the given order.
 .It Cm find Op Ar pattern
 Print the entries of the store one per line, optionally filtered by
 .Ar pattern .
-.It Cm gen Oo Fl nq Oc Oo Fl c Ar chars Oc Oo Fl l Ar length Oc Ar entry
-Generate and persist a password for the given
-.Ar entry
-in the store.
-.Fl c
-can be used to control the characters allowed in the password
-(by default
-.Dq !-~
-i.e. all the printable ASCII characters)
-and
-.Fl l
-the length
-.Pq 32 by default .
-Unless the
-.Fl q
-flag is provided, print the generated password.
-If the
-.Fl n
-flag is given the password won't be persisted and the
-.Ar entry
-argument is optional.
 .It Cm mv Ar from Ar to
 Rename a password entry, doesn't work with directories.
 .Ar from
@@ -104,8 +82,6 @@ option is given.
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
-.It Ev PLASS_CHARS
-default range of characters to use to generate passwords.
 .It Ev PLASS_GOT
 Path to the
 .Xr got 1
@@ -114,10 +90,8 @@ executable.
 Path to the
 .Xr gpg 1
 executable.
-.It Ev PLASS_LENGTH
-Default length for the generated passwords.
 .It Ev PLASS_STORE
-Path to the password store directory tree.
+Alternative path to the password store directory tree.
 .El
 .Sh FILES
 .Bl -tag -width Ds
@@ -149,9 +123,9 @@ delete
 and check out it again using
 .Xr got 1 .
 .Pp
-To generate a temporary random password use
+Generate a random password and save it to the clipboard:
 .Bd -literal -offset indent
-$ plass gen -n
+$ pwg | plass tee entry/name | xsel -b
 .Ed
 .Pp
 Display the entries matching
@@ -163,7 +137,8 @@ $ plass find key | rs
 .Sh SEE ALSO
 .Xr got 1 ,
 .Xr gpg 1 ,
-.Xr pass 1
+.Xr pass 1 ,
+.Xr pwg 1
 .Sh HISTORY
 .Nm
 was heavily influenced by
