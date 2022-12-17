@@ -54,6 +54,6 @@ ${DISTNAME}.sha256: ${DISTNAME}.tar.gz
 ${DISTNAME}.tar.gz: ${PROGS} ${MANS} ${EXTRA}
 	mkdir -p .dist/${DISTNAME}
 	${INSTALL_DATA} ${MANS} ${EXTRA} .dist/${DISTNAME}
-	${INSTALL_PROGRAM} plass .dist/${DISTNAME}
+	${INSTALL_PROGRAM} plass pwg .dist/${DISTNAME}
 	cd .dist && tar zcf ../$@ ${DISTNAME}
 	rm -rf .dist
