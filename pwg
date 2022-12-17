@@ -27,10 +27,10 @@ len=32
 
 while getopts anw: ch; do
 	case $ch in
-	a)	chars="[:alnum:]" ;;
-	n)	chars="[:digit:]" ;;
-	w)	wordlist="$OPTARG"; len=6 ;;
-	?)	usage ;;
+	a) chars="[:alnum:]" ;;
+	n) chars="[:digit:]" ;;
+	w) wordlist="$OPTARG"; len=6 ;;
+	?) usage ;;
 	esac
 done
 shift $(($OPTIND - 1))
