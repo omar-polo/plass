@@ -38,14 +38,9 @@ install: ${PROGS}
 lint:
 	man -Tlint -Wstyle -l ${MANS}
 
-plass.1.html: plass.1
-	man -Thtml -Ostyle=mandoc.css -l plass.1 > $@
-
-pwg.1.html: pwg.1
-	man -Thtml -Ostyle=mandoc.css -l pwg.1 > $@
-
-totp.1.html: totp.1
-	man -Thtml -Ostyle=mandoc.css -l totp.1 > $@
+.SUFFIXES: .1 .1.html
+.1.1.html:
+	man -Thtml -Ostyle=mandoc.css -l $< > $@
 
 mans: plass.1.html pwg.1.html totp.1.html
 
