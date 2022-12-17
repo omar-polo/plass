@@ -41,10 +41,13 @@ lint:
 plass.1.html: plass.1
 	man -Thtml -Ostyle=mandoc.css -l plass.1 > $@
 
+pwg.1.html: pwg.1
+	man -Thtml -Ostyle=mandoc.css -l pwg.1 > $@
+
 totp.1.html: totp.1
 	man -Thtml -Ostyle=mandoc.css -l totp.1 > $@
 
-mans: plass.1.html totp.1.html
+mans: plass.1.html pwg.1.html totp.1.html
 
 dist: ${DISTNAME}.sha256
 
