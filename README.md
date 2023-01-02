@@ -9,7 +9,7 @@ In addition, plass uses got(1) to manage the password store and bundles
 a small utility to generate TOTP codes: totp(1).  Password generation is
 done with a separate, but bundled, utility: pwg(1).
 
-To build and install it, just execute
+To build and install it, execute
 
 	$ make
 	$ doas make install
@@ -25,7 +25,7 @@ in ~/bin is provided.
 
 
 At the moment plass is completely compatible with pass, but in the
-future I'd like to switch the encryption tool to something different to
+future the encryption tool may be switched to something different to
 gpg.
 
 
