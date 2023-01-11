@@ -23,6 +23,7 @@ use open ":std", ":encoding(UTF-8)";
 use Getopt::Long qw(:config bundling require_order);
 use File::Basename;
 use File::Find;
+use File::Temp qw(tempfile);
 
 my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
 
@@ -33,6 +34,7 @@ my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to --use-agent);
 
 my %subcmd = (
 	cat	=> [\&cmd_cat,		"entries..."],
+	edit	=> [\&cmd_edit,		"entry"],
 	find	=> [\&cmd_find,		"[pattern]"],
 	mv	=> [\&cmd_mv,		"from to"],
 	rm	=> [\&cmd_rm,		"entries..."],
@@ -178,6 +180,47 @@ sub cmd_cat {
 		system ($gpg, @gpg_flags, '-d', $file);
 		die "failed to exec $gpg: $!" if $? == -1;
 	}
+}
+
+sub cmd_edit {
+	GetOptions('h|?' => \&usage) or usage;
+	usage if @ARGV != 1;
+
+	my $editor = $ENV{'VISUAL'} // $ENV{'EDITOR'} // 'ed';
+
+	my $entry = shift @ARGV;
+	my $epath = name2file $entry;
+
+	my ($fh, $filename) = tempfile "/tmp/plass-XXXXXXXXXX";
+
+	open (my $stdout, ">&", STDOUT) or die "can't redirect stdout: $!";
+
+	open (STDOUT, ">&", $fh) or die "can't redirect stdout to $filename";
+	system ($gpg, @gpg_flags, '-d', $epath);
+	die "$gpg exited with $?\n" if $? != 0;
+
+	# restore stdout so the editor can access the TTY if needed.
+	open (STDOUT, ">&", $stdout) or die "can't restore stdout: $!";
+
+	my $oldtime = (stat($fh))[9];
+
+	system ($editor, $filename);
+	die "editor $editor failed\n" if $? != 0;
+
+	my $newtime = (stat($filename))[9];
+
+	if ($oldtime == $newtime) {
+		say STDERR "no changes made.";
+		return
+	}
+
+	open(STDIN, '<', $filename) or die "can't redirect stdin: $!";
+	open(STDOUT, '>', $epath) or die "can't redirect stdout: $!";
+	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', '-');
+	die "gpg failed" if $? != 0;
+
+	got_add $epath;
+	got_ci "update $entry";
 }
 
 sub cmd_find {

@@ -60,6 +60,10 @@ The following commands are available:
 Decrypt and print the content of
 .Ar entries
 in the given order.
+.It Cm edit Ar entry
+Modify the content of the given
+.Ar entry
+using an editor.
 .It Cm find Op Ar pattern
 Print the entries of the store one per line, optionally filtered by
 the case-insensitive
@@ -93,6 +97,14 @@ Path to the
 executable.
 .It Ev PLASS_STORE
 Alternative path to the password store directory tree.
+.It Ev VISUAL , Ev EDITOR
+The editor spawned by
+.Nm
+.Cm edit .
+If not set, the
+.Xr ed 1
+text editor will be used in order to given it the attention
+it deserves.
 .El
 .Sh FILES
 .Bl -tag -width Ds
@@ -141,7 +153,7 @@ Enable tab-completion of
 command names and entries in
 .Xr ksh 1 :
 .Bd -literal -offset indent
-$ set -A complete_plass_1 -- cat find mv rm tee
+$ set -A complete_plass_1 -- cat edit find mv rm tee
 $ set -A complete_plass -- $(plass find)
 .Ed
 .Sh SEE ALSO
