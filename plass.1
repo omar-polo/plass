@@ -76,7 +76,7 @@ from the store.
 .It Cm tee Oo Fl q Oc Ar entry
 Persist the data read from standard input into the store under the given
 .Ar entry
-name and the print it again on the standard output unless the
+name and then print it again on the standard output unless the
 .Fl q
 option is given.
 .El
@@ -172,6 +172,6 @@ or similar if it's a concern.
 .Cm mv
 is not able to move directory trees, only file entries.
 .Pp
-There isn't a
+There isn't an
 .Cm init
 sub-command, the store initialization must be performed manually.
