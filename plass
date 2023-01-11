@@ -211,12 +211,14 @@ sub cmd_edit {
 
 	if ($oldtime == $newtime) {
 		say STDERR "no changes made.";
+		unlink $filename or die "can't delete $filename: $!\n";
 		return
 	}
 
 	open(STDIN, '<', $filename) or die "can't redirect stdin: $!";
 	open(STDOUT, '>', $epath) or die "can't redirect stdout: $!";
 	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', '-');
+	unlink $filename or die "can't delete $filename: $!\n";
 	die "gpg failed" if $? != 0;
 
 	got_add $epath;
