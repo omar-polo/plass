@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Omar Polo <op@openbsd.org>
+ * Copyright (c) 2022, 2023 Omar Polo <op@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -95,6 +95,23 @@ b32decode(const char *s, char *q, size_t qlen)
 	return (q - t);
 }
 
+static int
+uri2secret(char *s)
+{
+	char		*q, *t;
+
+	if ((q = strchr(s, '?')) == NULL)
+		return (-1);
+	if ((t = strstr(q, "?secret=")) == NULL &&
+	    (t = strstr(q, "&secret=")) == NULL)
+		return (-1);
+	t += 8;
+	while (*t != '\0' && *t != '&' && *t != '#')
+		*s++ = *t++;
+	*s = '\0';
+	return (0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -141,6 +158,9 @@ main(int argc, char **argv)
 	*q = '\0';
 	if (linelen < 1)
 		errx(1, "no secret provided");
+
+	if (!strncmp(line, "otpauth://", 10) && uri2secret(line) == -1)
+		errx(1, "failed to decode otpauth URI");
 
 	if ((buflen = b32decode(line, buf, sizeof(buf))) == 0)
 		err(1, "can't base32 decode the secret");
