@@ -262,6 +262,10 @@ sub cmd_tee {
 	    '--batch', '--yes', '-o', $file);
 	open my $fh, '|-', @args;
 
+	binmode(STDIN) or die "cannot binmode STDIN";
+	binmode(STDOUT) or die "cannot binmode STDOUT";
+	binmode($fh) or die "cannot binmode pipe";
+
 	local $/ = \1024;
 	while (<STDIN>) {
 		print $fh $_;
