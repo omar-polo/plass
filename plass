@@ -27,8 +27,6 @@ use File::Temp qw(tempfile);
 
 my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
 
-my $got = $ENV{'PLASS_GOT'} // 'got';
-
 my $gpg = $ENV{'PLASS_GPG'} // 'gpg';
 my @gpg_flags = qw(--quiet --compress-algo=none --no-encrypt-to --use-agent);
 
@@ -138,7 +136,7 @@ sub passfind {
 
 sub got {
 	# discard stdout
-	open my $fh, '-|', ($got, @_);
+	open my $fh, '-|', ('got', @_);
 	close($fh);
 	return !$?;
 }
@@ -164,8 +162,8 @@ sub got_ci {
 
 	open (STDOUT, ">&", \*STDERR)
 	    or die "can't redirect stdout to stderr";
-	exec ($got, 'commit', '-m', shift)
-	    or die "failed to exec $got: $!";
+	exec ('got', 'commit', '-m', shift)
+	    or die "failed to exec got: $!";
 }
 
 
