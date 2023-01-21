@@ -1,13 +1,18 @@
 # plass -- manage passwords
 
-plass is a password manager inspired by password-store but reimplemented
-with a smaller and (IMHO) cleaner interface.  It doesn't have fancy
-trees nor colors in the output; the absence of these is considered a
-feature.
+plass is a password manager inspired by password-store in the essence
+but completely reimplemented with a smaller and (IMO) cleaner interface.
+It doesn't have fancy trees nor colors in the output; the absence of
+these is considered a feature.  It aims to stay closer to the "UNIX
+phylosophy" by trying to do one thing only and to it (hopefully) well.
 
-In addition, plass uses got(1) to manage the password store and bundles
-a small utility to generate TOTP codes: totp(1).  Password generation is
-done with a separate, but bundled, utility: pwg(1).
+With plass every password lives inside a gpg(1) encrypted file somewhere
+inside `~/.password-store` which is managed with the got(1) VCS to keep
+track changes, recovery accidental overwrites and synchronize it across
+devices.  Two helper utilities are bundled:
+
+ - pwg(1): password/passphrase generator
+ - totp(1): TOTP generator
 
 To build and install it, execute
 
@@ -33,7 +38,7 @@ gpg.
 
 plass is free software distributed under the ISC license
 
-	Copyright (c) 2022 Omar Polo
+	Copyright (c) 2022, 2023 Omar Polo
 
 	Permission to use, copy, modify, and distribute this software for any
 	purpose with or without fee is hereby granted, provided that the above
