@@ -11,7 +11,7 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.Dd January 2, 2023
+.Dd January 21, 2023
 .Dt PLASS 1
 .Os
 .Sh NAME
@@ -24,31 +24,17 @@
 .Op Ar argument ...
 .Sh DESCRIPTION
 .Nm
-is a simple password manager.
-Passwords are stored as a directory tree where every password is a
-file encrypted with
-.Xr gpg 1 .
-.Pp
-A password store is a
+is a password manager.
+Every password lives inside a
+.Xr gpg 1
+encrypted file somewhere inside
+.Pa ~/.password-store
+which is managed with the
 .Xr got 1
-repository with a worktree checked out at
-.Pa ~/.password-store .
-The only restriction is that a special file called
-.Pa .gpg-id
-containing the GPG recipient must exist in the root of the directory tree
-for most
-.Nm
-commands to work.
+version control system to keep track of changes, recovery accidental
+overwrites and synchronize it across devices.
 .Pp
-Password entries can be referenced using the path relative to the
-store directory.
-The file extension
-.Dq \&.gpg
-can be omitted.
-.Pp
-.Nm
-provides global and command-specific options.
-Global options must precede the command name, and are as follows:
+The options are as follows:
 .Bl -tag -width Ds
 .It Fl h
 Display usage information and exit immediately.
@@ -61,9 +47,9 @@ Decrypt and print the content of
 .Ar entries
 in the given order.
 .It Cm edit Ar entry
-Modify the content of the given
+Interactively modify the content of the given
 .Ar entry
-using an editor.
+with an editor.
 .It Cm find Op Ar pattern
 Print the entries of the store one per line, optionally filtered by
 the case-insensitive
@@ -85,6 +71,12 @@ name and then print it again on the standard output unless the
 .Fl q
 option is given.
 .El
+.Pp
+Password entries can be referenced using the path relative to the
+store directory.
+The file extension
+.Dq \&.gpg
+can be omitted.
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
 .It Ev PLASS_GPG
@@ -137,6 +129,12 @@ Generate a random password and save it to the clipboard:
 $ pwg | plass tee entry/name | xsel -b
 .Ed
 .Pp
+Generate a TOTP token using the secret stored in the password store:
+.Bd -literal -offset indent
+$ plass cat 2fa/codeberg/op | totp
+722524
+.Ed
+.Pp
 Display the entries matching
 .Sq key
 arranged comfortably for reading in a terminal window:
@@ -155,7 +153,8 @@ $ set -A complete_plass -- $(plass find)
 .Sh SEE ALSO
 .Xr got 1 ,
 .Xr gpg 1 ,
-.Xr pwg 1
+.Xr pwg 1 ,
+.Xr totp 1
 .Sh HISTORY
 .Nm
 was heavily influenced by
