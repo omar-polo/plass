@@ -80,27 +80,6 @@ sub mkdirs {
 	    unless -d $dir;
 }
 
-sub writepass {
-	my ($file, $pass) = @_;
-
-	mkdirs(dirname $file);
-
-	# temporary redirect stdout to $file
-	open(my $stdout, '>&', STDOUT);
-	open(STDOUT, '>', $file);
-
-	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
-	    '-o', '-');
-	open my $fh, '|-', @args;
-	print $fh "$pass";
-	close($fh);
-	my $ok = !$?;
-
-	open(STDOUT, '>&', $stdout); # restore stdout
-
-	die "failed to run $gpg\n" unless $ok;
-}
-
 sub recipient {
 	open my $fh, '<', "$store/.gpg-id"
 	    or die "can't open recipient file";
@@ -277,14 +256,20 @@ sub cmd_tee {
 	my $file = name2file $name;
 
 	my $msg = -f $file ? "update $name" : "+$name";
+	mkdirs(dirname $file);
 
-	my $pass = "";
-	$pass .= $_ while <STDIN>;
-	die "No content!\n" if $pass eq "";
+	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
+	    '--batch', '--yes', '-o', $file);
+	open my $fh, '|-', @args;
 
-	writepass($file, $pass);
+	local $/ = \1024;
+	while (<STDIN>) {
+		print $fh $_;
+		print $_ unless $q;
+	}
+	close($fh);
+	exit $? if $?;
 
 	got_add $file;
 	got_ci $msg;
-	print $pass unless $q;
 }
