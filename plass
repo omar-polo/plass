@@ -80,6 +80,33 @@ sub mkdirs {
 	    unless -d $dir;
 }
 
+sub edit {
+	my ($editor, $fh, $tempfile, $epath) = @_;
+
+	open (my $stdout, ">&", STDOUT) or die "can't redirect stdout: $!";
+	open (STDOUT, ">&", $fh) or die "can't redirect stdout to $tempfile";
+	system ($gpg, @gpg_flags, '-d', $epath);
+	die "$gpg exited with $?\n" if $? != 0;
+	open (STDOUT, ">&", $stdout) or die "can't restore stdout: $!";
+
+	my $oldtime = (stat($fh))[9];
+	close($fh);
+
+	system ($editor, $tempfile);
+	die "editor $editor failed\n" if $? != 0;
+
+	my $newtime = (stat($tempfile))[9];
+	if ($oldtime == $newtime) {
+		say STDERR "no changes made.";
+		return
+	}
+
+	open(STDOUT, '>', $epath) or die "can't redirect stdout: $!";
+	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', '-',
+	    $tempfile);
+	die "gpg failed" if $? != 0;
+}
+
 sub recipient {
 	open my $fh, '<', "$store/.gpg-id"
 	    or die "can't open recipient file";
@@ -168,35 +195,10 @@ sub cmd_edit {
 	my $entry = shift @ARGV;
 	my $epath = name2file $entry;
 
-	my ($fh, $filename) = tempfile "/tmp/plass-XXXXXXXXXX";
-
-	open (my $stdout, ">&", STDOUT) or die "can't redirect stdout: $!";
-
-	open (STDOUT, ">&", $fh) or die "can't redirect stdout to $filename";
-	system ($gpg, @gpg_flags, '-d', $epath);
-	die "$gpg exited with $?\n" if $? != 0;
-
-	# restore stdout so the editor can access the TTY if needed.
-	open (STDOUT, ">&", $stdout) or die "can't restore stdout: $!";
-
-	my $oldtime = (stat($fh))[9];
-
-	system ($editor, $filename);
-	die "editor $editor failed\n" if $? != 0;
-
-	my $newtime = (stat($filename))[9];
-
-	if ($oldtime == $newtime) {
-		say STDERR "no changes made.";
-		unlink $filename or die "can't delete $filename: $!\n";
-		return
-	}
-
-	open(STDIN, '<', $filename) or die "can't redirect stdin: $!";
-	open(STDOUT, '>', $epath) or die "can't redirect stdout: $!";
-	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', '-');
-	unlink $filename or die "can't delete $filename: $!\n";
-	die "gpg failed" if $? != 0;
+	my ($fh, $tempfile) = tempfile "/tmp/plass-XXXXXXXXXX";
+	eval { edit $editor, $fh, $tempfile, $epath };
+	unlink $tempfile;
+	die "$@\n" if $@;
 
 	got_add $epath;
 	got_ci "update $entry";
