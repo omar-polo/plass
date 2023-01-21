@@ -148,7 +148,18 @@ sub got {
 }
 
 sub got_add {
-	return got 'add', '-I', shift;
+	my $file = shift;
+
+	open (my $null, '>', '/dev/null') or die "can't open /dev/null: $!";
+	open (my $stderr, ">&", STDERR) or die "can't save stderr: $!";
+	open (STDERR, ">&", $null) or die "can't redirect stderr: $!";
+
+	got 'info', $file;
+	my $found = !$?;
+
+	open (STDERR, ">&", $stderr) or die "can't restore stderr: $!";
+
+	return $found ? 1 : (got 'add', '-I', $file);
 }
 
 sub got_rm {
