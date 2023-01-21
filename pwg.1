@@ -11,7 +11,7 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.Dd December 2, 2022
+.Dd January 21, 2023
 .Dt PWG 1
 .Os
 .Sh NAME
@@ -24,8 +24,8 @@
 .Op Ar length
 .Sh DESCRIPTION
 .Nm
-is a simple password generator.
-It outputs a random string of characters or a diceware-style pass
+is a password and passphrase generator.
+It generates a random string of characters or a diceware-style pass
 phrase.
 The random properties are the ones provided by the operating system'
 .Pa /dev/urandom
@@ -47,7 +47,7 @@ file.
 .Pp
 If no
 .Ar length
-is given, an appropriate number is used.
+is given, an appropriate one is used.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
