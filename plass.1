@@ -11,7 +11,7 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.Dd January 21, 2023
+.Dd January 23, 2023
 .Dt PLASS 1
 .Os
 .Sh NAME
@@ -133,6 +133,14 @@ Generate a TOTP token using the secret stored in the password store:
 .Bd -literal -offset indent
 $ plass cat 2fa/codeberg/op | totp
 722524
+.Ed
+.Pp
+Interactively edit the contents of
+.Pa entry/name
+with
+.Xr mg 1 :
+.Bd -literal -offset indent
+$ env VISUAL=mg plass edit entry/name
 .Ed
 .Pp
 Display the entries matching
