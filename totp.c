@@ -98,17 +98,20 @@ b32decode(const char *s, char *q, size_t qlen)
 static int
 uri2secret(char *s)
 {
-	char		*q, *t;
+	char		*q, *t, *f, *secret = NULL;
 
 	if ((q = strchr(s, '?')) == NULL)
 		return (-1);
-	if ((t = strstr(q, "?secret=")) == NULL &&
-	    (t = strstr(q, "&secret=")) == NULL)
+
+	t = q + 1;
+	while ((f = strsep(&t, "&")) != NULL) {
+		if (!strncmp(f, "secret=", 7))
+			secret = f + 7;
+	}
+
+	if (secret == NULL)
 		return (-1);
-	t += 8;
-	while (*t != '\0' && *t != '&' && *t != '#')
-		*s++ = *t++;
-	*s = '\0';
+	memmove(s, secret, strlen(secret) + 1);
 	return (0);
 }
 
