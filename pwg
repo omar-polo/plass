@@ -39,8 +39,8 @@ shift $(($OPTIND - 1))
 [ $# -eq 1 ] && len="$1"
 
 if [ -n "$wordlist" ]; then
-	passphrase=$(sort -R "$wordlist" | head -n "$len")
-	[ -n "$passphrase" ] && echo $passphrase
+	passphrase=$(sort -R -- "$wordlist" | head -n "$len")
+	[ -n "$passphrase" ] && printf '%s\n' "$passphrase"
 else
 	export LC_ALL=C
 	tr -cd "$chars" </dev/urandom | dd bs=1 count="$len" 2>/dev/null && \
