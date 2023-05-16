@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, 2023 Omar Polo <op@openbsd.org>
+ * Copyright (c) 2014 Reyk Floeter <reyk@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -95,6 +96,43 @@ b32decode(const char *s, char *q, size_t qlen)
 	return (q - t);
 }
 
+/* adapted from httpd(8) */
+static char *
+url_decode(char *url, char *dst)
+{
+	char		*p, *q;
+	char		 hex[3];
+	unsigned long	 x;
+
+	hex[2] = '\0';
+	p = url;
+	q = dst;
+
+	while (*p != '\0') {
+		if (*p != '%') {
+			*q++ = *p++;
+			continue;
+		}
+
+		if (!isxdigit((unsigned char)p[1]) ||
+		    !isxdigit((unsigned char)p[2]))
+			return (NULL);
+
+		hex[0] = p[1];
+		hex[1] = p[2];
+
+		/*
+		 * We don't have to validate "hex" because it is
+		 * guaranteed to include two hex chars followed by nul.
+		 */
+		x = strtoul(hex, NULL, 16);
+		*q++ = (char)x;
+		p += 3;
+	}
+	*q = '\0';
+	return (url);
+}
+
 static int
 uri2secret(char *s)
 {
@@ -111,7 +149,8 @@ uri2secret(char *s)
 
 	if (secret == NULL)
 		return (-1);
-	memmove(s, secret, strlen(secret) + 1);
+	if (url_decode(secret, s) == NULL)
+		errx(1, "failed to percent-decode the secret");
 	return (0);
 }
 
