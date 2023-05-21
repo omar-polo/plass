@@ -134,7 +134,7 @@ url_decode(char *url, char *dst)
 }
 
 static int
-uri2secret(char *s)
+uri2secret(char *s, int *digits)
 {
 	char		*q, *t, *f, *secret = NULL;
 
@@ -145,6 +145,17 @@ uri2secret(char *s)
 	while ((f = strsep(&t, "&")) != NULL) {
 		if (!strncmp(f, "secret=", 7))
 			secret = f + 7;
+		else if (!strncmp(f, "digits=", 7)) {
+			f += 7;
+			if (!strcmp(f, "6"))
+				*digits = 6;
+			else if (!strcmp(f, "7"))
+				*digits = 7;
+			else if (!strcmp(f, "8"))
+				*digits = 8;
+			else
+				warnx("invalid number of digits; using 6");
+		}
 	}
 
 	if (secret == NULL)
@@ -167,7 +178,7 @@ main(int argc, char **argv)
 	uint64_t	 ct;
 	uint32_t	 hash;
 	uint8_t		 off;
-	int		 ch;
+	int		 ch, digits = 6;
 
 	if (pledge("stdio", NULL) == -1)
 		err(1, "pledge");
@@ -201,7 +212,8 @@ main(int argc, char **argv)
 	if (linelen < 1)
 		errx(1, "no secret provided");
 
-	if (!strncmp(line, "otpauth://", 10) && uri2secret(line) == -1)
+	if (!strncmp(line, "otpauth://", 10) &&
+	    uri2secret(line, &digits) == -1)
 		errx(1, "failed to decode otpauth URI");
 
 	if ((buflen = b32decode(line, buf, sizeof(buf))) == 0)
@@ -216,7 +228,18 @@ main(int argc, char **argv)
 
 	memcpy(&hash, md + off, sizeof(hash));
 	hash = be32toh(hash);
-	printf("%06d\n", (hash & 0x7FFFFFFF) % 1000000);
+
+	switch (digits) {
+	case 6:
+		printf("%06d\n", (hash & 0x7FFFFFFF) % 1000000);
+		break;
+	case 7:
+		printf("%07d\n", (hash & 0x7FFFFFFF) % 10000000);
+		break;
+	case 8:
+		printf("%08d\n", (hash & 0x7FFFFFFF) % 100000000);
+		break;
+	}
 
 	free(line);
 	return (0);
