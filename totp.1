@@ -34,7 +34,8 @@ URL.
 Blanks in the secret string are ignored, but only one line is read.
 .Pp
 .Nm
-uses a period of 30 seconds and generates six digits long codes.
+uses a period of 30 seconds and generates six digits long codes using
+HMAC-SHA1, unless the URL specifies otherwise.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
