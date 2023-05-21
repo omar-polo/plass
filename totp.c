@@ -134,9 +134,10 @@ url_decode(char *url, char *dst)
 }
 
 static int
-uri2secret(char *s, int *digits, const EVP_MD **alg)
+uri2secret(char *s, int *digits, const EVP_MD **alg, int *period)
 {
 	char		*q, *t, *f, *secret = NULL;
+	const char	*errstr;
 
 	if ((q = strchr(s, '?')) == NULL)
 		return (-1);
@@ -165,6 +166,13 @@ uri2secret(char *s, int *digits, const EVP_MD **alg)
 				*alg = EVP_sha512();
 			else
 				warnx("unknown algorithm; using SHA1");
+		} else if (!strncmp(f, "period=", 7)) {
+			f += 7;
+			*period = strtonum(f, 1, 120, &errstr);
+			if (errstr) {
+				warnx("period is %s: %s; using 30", errstr, f);
+				*period = 30;
+			}
 		}
 	}
 
@@ -189,7 +197,7 @@ main(int argc, char **argv)
 	uint64_t	 ct;
 	uint32_t	 hash;
 	uint8_t		 off;
-	int		 ch, digits = 6;
+	int		 ch, digits = 6, period = 30;
 
 	if (pledge("stdio", NULL) == -1)
 		err(1, "pledge");
@@ -226,13 +234,13 @@ main(int argc, char **argv)
 		errx(1, "no secret provided");
 
 	if (!strncmp(line, "otpauth://", 10) &&
-	    uri2secret(line, &digits, &alg) == -1)
+	    uri2secret(line, &digits, &alg, &period) == -1)
 		errx(1, "failed to decode otpauth URI");
 
 	if ((buflen = b32decode(line, buf, sizeof(buf))) == 0)
 		err(1, "can't base32 decode the secret");
 
-	ct = htobe64(time(NULL) / 30);
+	ct = htobe64(time(NULL) / period);
 
 	HMAC(alg, buf, buflen, (unsigned char *)&ct, sizeof(ct), md, &mdlen);
 
