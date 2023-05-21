@@ -134,7 +134,7 @@ url_decode(char *url, char *dst)
 }
 
 static int
-uri2secret(char *s, int *digits)
+uri2secret(char *s, int *digits, const EVP_MD **alg)
 {
 	char		*q, *t, *f, *secret = NULL;
 
@@ -155,6 +155,16 @@ uri2secret(char *s, int *digits)
 				*digits = 8;
 			else
 				warnx("invalid number of digits; using 6");
+		} else if (!strncmp(f, "algorithm=", 10)) {
+			f += 10;
+			if (!strcmp(f, "SHA1"))
+				*alg = EVP_sha1();
+			else if (!strcmp(f, "SHA256"))
+				*alg = EVP_sha256();
+			else if (!strcmp(f, "SHA512"))
+				*alg = EVP_sha512();
+			else
+				warnx("unknown algorithm; using SHA1");
 		}
 	}
 
@@ -170,6 +180,7 @@ main(int argc, char **argv)
 {
 	char		 buf[1024];
 	size_t		 buflen;
+	const EVP_MD	*alg;
 	unsigned char	 md[EVP_MAX_MD_SIZE];
 	unsigned int	 mdlen;
 	char		*s, *q, *line = NULL;
@@ -195,6 +206,8 @@ main(int argc, char **argv)
 	if (argc != 0)
 		usage();
 
+	alg = EVP_sha1();
+
 	linelen = getline(&line, &linesize, stdin);
 	if (linelen == -1) {
 		if (ferror(stdin))
@@ -213,7 +226,7 @@ main(int argc, char **argv)
 		errx(1, "no secret provided");
 
 	if (!strncmp(line, "otpauth://", 10) &&
-	    uri2secret(line, &digits) == -1)
+	    uri2secret(line, &digits, &alg) == -1)
 		errx(1, "failed to decode otpauth URI");
 
 	if ((buflen = b32decode(line, buf, sizeof(buf))) == 0)
@@ -221,8 +234,7 @@ main(int argc, char **argv)
 
 	ct = htobe64(time(NULL) / 30);
 
-	HMAC(EVP_sha1(), buf, buflen, (unsigned char *)&ct, sizeof(ct),
-	    md, &mdlen);
+	HMAC(alg, buf, buflen, (unsigned char *)&ct, sizeof(ct), md, &mdlen);
 
 	off = md[mdlen - 1] & 0x0F;
 
