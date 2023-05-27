@@ -19,12 +19,6 @@ To build and install it, execute
 	$ make
 	$ doas make install
 
-On linux, `libbsd-overlay` must be used:
-
-	$ make CFLAGS="$(pkg-config --cflags libbsd-overlay)" \
-		LDFLAGS="$(pkg-config --libs libbsd-overlay libcrypto)"
-	$ sudo make install
-
 For casual use, an `install-local` target that only copies the programs
 in ~/bin is provided.
 
