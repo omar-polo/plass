@@ -22,7 +22,6 @@ To build and install it, execute
 For casual use, an `install-local` target that only copies the programs
 in ~/bin is provided.
 
-
 At the moment plass is completely compatible with pass, but in the
 future the encryption tool may be switched to something different to
 gpg.
