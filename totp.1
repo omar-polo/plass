@@ -34,8 +34,8 @@ URI.
 Blanks in the secret string are ignored, but only one line is read.
 .Pp
 .Nm
-uses a period of 30 seconds and generates six digits long codes using
-HMAC-SHA1, unless the URL specifies otherwise.
+uses a period of 30 seconds, HMAC-SHA1 and generates six digits long
+codes, unless the URL specifies otherwise.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
@@ -58,6 +58,10 @@ follows the algorithm outlined in RFC 6238
 .Dq TOTP: Time-Based One-Time Password Algorithm
 and uses the base32 encoding as defined in RFC 3548
 .Dq The Base16, Base32, and Base64 Data Encodings .
+.Sq otpauth://
+URIs are parsed as per the
+.Dq Key URI Format
+proposed by Google Authenticator.
 .Sh AUTHORS
 .An -nosplit
 The
