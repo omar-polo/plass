@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,9 +48,16 @@
 #endif
 
 static __dead void
-usage(void)
+usage(const char *argv0)
 {
-	fprintf(stderr, "usage: %s\n", getprogname());
+	const char	*me;
+
+	if ((me = strrchr(argv0, '/')) != NULL)
+		me++;
+	else
+		me = argv0;
+
+	fprintf(stderr, "usage: %s\n", me);
 	exit(1);
 }
 
@@ -136,8 +144,8 @@ url_decode(char *url, char *dst)
 static int
 uri2secret(char *s, int *digits, const EVP_MD **alg, int *period)
 {
-	char		*q, *t, *f, *secret = NULL;
-	const char	*errstr;
+	char		*q, *t, *f, *ep, *secret = NULL;
+	long		 l;
 
 	if ((q = strchr(s, '?')) == NULL)
 		return (-1);
@@ -168,11 +176,15 @@ uri2secret(char *s, int *digits, const EVP_MD **alg, int *period)
 				warnx("unknown algorithm; using SHA1");
 		} else if (!strncmp(f, "period=", 7)) {
 			f += 7;
-			*period = strtonum(f, 1, 120, &errstr);
-			if (errstr) {
-				warnx("period is %s: %s; using 30", errstr, f);
-				*period = 30;
-			}
+			errno = 0;
+			l = strtol(f, &ep, 10);
+			if (f[0] == '\0' || *ep != '\0')
+				err(1, "period is not a number: %s", f);
+			if (errno == ERANGE && (l == LONG_MAX || l == LONG_MIN))
+				err(1, "period is way out of range: %s", f);
+			if (l < 1 || l > 120)
+				err(1, "period is out of range: %s", f);
+			*period = l;
 		}
 	}
 
@@ -191,6 +203,7 @@ main(int argc, char **argv)
 	const EVP_MD	*alg;
 	unsigned char	 md[EVP_MAX_MD_SIZE];
 	unsigned int	 mdlen;
+	const char	*argv0;
 	char		*s, *q, *line = NULL;
 	size_t		 linesize = 0;
 	ssize_t		 linelen;
@@ -202,17 +215,20 @@ main(int argc, char **argv)
 	if (pledge("stdio", NULL) == -1)
 		err(1, "pledge");
 
+	if ((argv0 = argv[0]) == NULL)
+		argv0 = "totp";
+
 	while ((ch = getopt(argc, argv, "")) != -1) {
 		switch (ch) {
 		default:
-			usage();
+			usage(argv0);
 		}
 	}
 	argc -= optind;
 	argv += optind;
 
 	if (argc != 0)
-		usage();
+		usage(argv0);
 
 	alg = EVP_sha1();
 
