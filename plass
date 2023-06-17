@@ -137,7 +137,8 @@ sub passfind {
 		no_chdir => 1,
 		follow_fast => 1,
 	     }, ($store));
-	return sort(@entries);
+	my @sorted_entries = sort(@entries);
+	return @sorted_entries;
 }
 
 sub got {
