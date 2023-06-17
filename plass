@@ -98,7 +98,7 @@ sub edit {
 	my $newtime = (stat($tempfile))[9];
 	if ($oldtime == $newtime) {
 		say STDERR "no changes made.";
-		return
+		return;
 	}
 
 	open(STDOUT, '>', $epath) or die "can't redirect stdout: $!";
