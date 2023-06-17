@@ -131,7 +131,7 @@ sub passfind {
 			s,^$store/*,,;
 			s,.gpg$,,;
 
-			return if defined($pattern) && ! m/$pattern/i;
+			return if defined($pattern) && ! m/$pattern/ix;
 			push @entries, $_;
 		},
 		no_chdir => 1,
