@@ -220,7 +220,7 @@ sub cmd_find {
 	GetOptions('h|?' => \&usage) or usage;
 	usage if @ARGV > 1;
 
-	map { say $_ } passfind(shift @ARGV);
+	say $_ foreach passfind(shift @ARGV);
 }
 
 # TODO: handle moving directories?
