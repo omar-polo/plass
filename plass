@@ -23,6 +23,7 @@ use open ":std", ":encoding(UTF-8)";
 use Getopt::Long qw(:config bundling require_order);
 use File::Basename;
 use File::Find;
+use File::Path qw(make_path);
 use File::Temp qw(tempfile);
 
 my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
@@ -70,14 +71,6 @@ sub name2file {
 	my $f = shift;
 	$f .= ".gpg" unless $f =~ m,\.gpg$,;
 	return $f;
-}
-
-sub mkdirs {
-	my $dir = shift;
-	my $parent = dirname $dir;
-	mkdirs($parent) unless -d $parent || $parent eq '/';
-	mkdir $dir or die "mkdir $dir: $!"
-	    unless -d $dir;
 }
 
 sub edit {
@@ -237,7 +230,7 @@ sub cmd_mv {
 	die "source password doesn't exist" unless -f $pa;
 	die "target password exists" if -f $pb;
 
-	mkdirs(dirname $pb);
+	make_path(dirname $pb);
 	rename $pa, $pb or die "can't rename $a to $b: $!";
 
 	got_rm $pa;
@@ -270,7 +263,7 @@ sub cmd_tee {
 	my $file = name2file $name;
 
 	my $msg = -f $file ? "update $name" : "+$name";
-	mkdirs(dirname $file);
+	make_path(dirname $file);
 
 	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
 	    '--batch', '--yes', '-o', $file);
