@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env perl
 #
-# Copyright (c) 2022 Omar Polo <op@omarpolo.com>
+# Copyright (c) 2022, 2023 Omar Polo <op@omarpolo.com>
+# Copyright (c) 2023 Alexander Arkhipov <aa@alearx.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,35 +15,100 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-me=$(basename "$0")
+use strict;
+use warnings;
+use v5.32;
 
-usage() {
-	echo "usage: $me [-an] [-w wordlist] [len]" >&2
-	exit 1
+use open ":std", ":encoding(UTF-8)";
+
+use Getopt::Long qw(:config bundling require_order);
+use File::Basename;
+
+my $urandom; # opened later
+
+my $chars = "\x20-\x7E";
+my $wordlist;
+my $length = 32;
+
+my $me = basename $0;
+sub usage {
+	say STDERR "usage: $me [-anu] [-w wordlist] [len]";
+	exit(1);
 }
 
-wordlist=
-chars="[:print:]"
-len=32
+# not really arc4random but closer...
+sub arc4random {
+	my $r = read($urandom, my $buf, 4)
+	    or die "$me: failed to read /dev/urandom: $!\n";
+	die "$me: short read\n" if $r != 4;
+	return unpack('L', $buf);
+}
 
-while getopts anw: ch; do
-	case $ch in
-	a) chars="[:alnum:]" ;;
-	n) chars="[:digit:]" ;;
-	w) wordlist="$OPTARG"; len=6 ;;
-	?) usage ;;
-	esac
-done
-shift $(($OPTIND - 1))
+# Calculate a uniformly distributed random number less than $upper_bound
+# avoiding "modulo bias".
+#
+# Uniformity is achieved by generating new random numbers until the one
+# returned is outside the range [0, 2**32 % $upper_bound).  This
+# guarantees the selected random number will be inside
+# [2**32 % $upper_bound, 2**32) which maps back to [0, $upper_bound)
+# after reduction modulo $upper_bound.
+sub randline {
+	my $upper_bound = shift;
 
-[ $# -gt 1 ] && usage
-[ $# -eq 1 ] && len="$1"
+	return 0 if $upper_bound < 2;
 
-if [ -n "$wordlist" ]; then
-	passphrase=$(sort -R -- "$wordlist" | head -n "$len")
-	[ -n "$passphrase" ] && printf '%s\n' "$passphrase"
-else
-	export LC_ALL=C
-	tr -cd "$chars" </dev/urandom | dd bs=1 count="$len" 2>/dev/null && \
-		echo
-fi
+	my $min = 2**32 % $upper_bound;
+
+	# This could theoretically loop forever but each retry has
+	# p > 0.5 (worst case, usually far better) of selecting a
+	# number inside the range we need, so it should rarely need
+	# to re-roll.
+	my $r;
+	while (1) {
+		$r = arc4random;
+		last if $r >= $min;
+	}
+	return $r % $upper_bound;
+}
+
+GetOptions(
+	"a" => sub { $chars = "0-9a-zA-Z" },
+	"n" => sub { $chars = "0-9" },
+	"w=s" => \$wordlist,
+    ) or usage;
+
+$length = 6 if defined $wordlist;
+$length = shift if @ARGV;
+die "$me: invalid length: $length\n" unless $length =~ /^\d+$/;
+
+open($urandom, "<:raw", "/dev/urandom")
+    or die "$me: can't open /dev/urandom: $!\n";
+
+if (not defined $wordlist) {
+	my $pass = "";
+	my $l = $length;
+	while ($l >= 0) {
+		read($urandom, my $t, 128)
+		    or die "$me: failed to read /dev/urandom: $!\n";
+		$t =~ s/[^$chars]//g;
+		$l -= length($t);
+		$pass .= $t;
+	}
+	say substr($pass, 0, $length);
+	exit 0;
+}
+
+open(my $fh, "<", $wordlist) or die "$me: can't open $wordlist: $!\n";
+
+my @lines = (0);
+push @lines, tell $fh while <$fh>;
+
+while ($length--) {
+	seek $fh, $lines[randline scalar(@lines)], 0
+	    or die "$me: seek: $!\n";
+	my $line = <$fh>;
+	chomp($line);
+	print $line;
+	print " " if $length;
+}
+say "";
