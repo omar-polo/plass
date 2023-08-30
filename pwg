@@ -32,7 +32,7 @@ my $length = 32;
 
 my $me = basename $0;
 sub usage {
-	say STDERR "usage: $me [-anu] [-w wordlist] [len]";
+	say STDERR "usage: $me [-an] [-w wordlist] [len]";
 	exit(1);
 }
 
