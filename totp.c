@@ -57,7 +57,7 @@ usage(const char *argv0)
 	else
 		me = argv0;
 
-	fprintf(stderr, "usage: %s\n", me);
+	fprintf(stderr, "usage: %s <secret\n", me);
 	exit(1);
 }
 
