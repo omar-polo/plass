@@ -11,7 +11,7 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.Dd August 29, 2023
+.Dd August 30, 2023
 .Dt PWG 1
 .Os
 .Sh NAME
@@ -24,11 +24,11 @@
 .Op Ar length
 .Sh DESCRIPTION
 .Nm
-is a password and passphrase generator.
-It generates a random string of characters or a diceware-style pass
-phrase.
+generates a random string of characters or a diceware-style pass
+phrase using wordlist, a file with one word per line.
 The random properties are the ones provided by the operating system'
-.Pa /dev/urandom .
+.Pa /dev/urandom
+device.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -38,8 +38,7 @@ Use only alphanumeric characters.
 Use only numbers.
 .It Fl w Ar wordlist
 Generate a passphrase from a the given
-.Ar wordlist ,
-a file with one word per line,
+.Ar wordlist
 instead of a random string of characters.
 .El
 .Pp
