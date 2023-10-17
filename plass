@@ -20,11 +20,16 @@ use v5.32;
 
 use open ":std", ":encoding(UTF-8)";
 
+use Encode::Locale qw(decode_argv);
+use Encode qw(decode);
+
 use Getopt::Long qw(:config bundling require_order);
 use File::Basename;
 use File::Find;
 use File::Path qw(make_path);
 use File::Temp qw(tempfile);
+
+decode_argv;
 
 my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
 
@@ -115,11 +120,13 @@ sub passfind {
 
 	find({
 		wanted => sub {
+			my $raw = $_;
+			$_ = decode(locale => $_);
 			if (m,/.git$, || m,/.got$,) {
 				$File::Find::prune = 1;
 				return;
 			}
-			return unless -f && m,.gpg$,;
+			return unless -f $raw && m,.gpg$,;
 
 			s,^$store/*,,;
 			s,.gpg$,,;
