@@ -20,7 +20,7 @@ use v5.32;
 
 use open ":std", ":encoding(UTF-8)";
 
-use Encode::Locale qw(decode_argv);
+use Encode::Locale;
 use Encode qw(decode);
 
 use Getopt::Long qw(:config bundling require_order);
@@ -28,8 +28,6 @@ use File::Basename;
 use File::Find;
 use File::Path qw(make_path);
 use File::Temp qw(tempfile);
-
-decode_argv;
 
 my $store = $ENV{'PLASS_STORE'} // $ENV{'HOME'}.'/.password-store';
 
@@ -117,6 +115,8 @@ sub recipient {
 sub passfind {
 	my $pattern = shift;
 	my @entries;
+
+	$pattern = decode(locale => $pattern) if defined $pattern;
 
 	find({
 		wanted => sub {
