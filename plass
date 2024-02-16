@@ -142,25 +142,22 @@ sub passfind {
 }
 
 sub got {
-	# discard stdout
-	open my $fh, '-|', ('got', @_);
-	close($fh);
-	return !$?;
+	my $pid = fork;
+	die "failed to fork: $!" unless defined $pid;
+
+	if ($pid != 0) {
+		wait;
+		return !$?;
+	}
+
+	open (STDOUT, '>', '/dev/null')
+	    or die "can't redirect to /dev/null";
+	exec ('got', @_);
 }
 
 sub got_add {
-	my $file = shift;
-
-	open (my $null, '>', '/dev/null') or die "can't open /dev/null: $!";
-	open (my $stderr, ">&", STDERR) or die "can't save stderr: $!";
-	open (STDERR, ">&", $null) or die "can't redirect stderr: $!";
-
-	got 'info', $file;
-	my $found = !$?;
-
-	open (STDERR, ">&", $stderr) or die "can't restore stderr: $!";
-
-	return $found ? 1 : (got 'add', '-I', $file);
+	got 'add', shift
+	    or exit(1);
 }
 
 sub got_rm {
