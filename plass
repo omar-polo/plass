@@ -97,9 +97,9 @@ sub edit {
 		return;
 	}
 
-	open(STDOUT, '>', $epath) or die "can't redirect stdout: $!";
-	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', '-',
-	    $tempfile);
+	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', $epath,
+	    '--batch', '--yes', $tempfile);
+	
 	die "gpg failed" if $? != 0;
 }
 
