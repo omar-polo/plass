@@ -64,6 +64,13 @@ usage(const char *argv0)
 static int
 b32c(unsigned char c)
 {
+	/*
+	 * Some authenticators (hi google) are now using
+	 * all-lowercase secrets, so deal with them.
+	 */
+	if (c >= 'a' && c <= 'z')
+		c = toupper((unsigned char)c);
+
 	if (c >= 'A' && c <= 'Z')
 		return (c - 'A');
 	if (c >= '2' && c <= '7')
