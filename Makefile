@@ -1,4 +1,4 @@
-VERSION=	0.7
+VERSION=	1.0
 DISTNAME=	plass-${VERSION}
 PROGS=		plass pwg totp
 MANS=		plass.1 pwg.1 totp.1
