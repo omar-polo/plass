@@ -97,19 +97,25 @@ sub edit {
 		return;
 	}
 
-	system ($gpg, @gpg_flags, '-e', '-r', recipient(), '-o', $epath,
+	system ($gpg, @gpg_flags, '-e', recipient(), '-o', $epath,
 	    '--batch', '--yes', $tempfile);
 	
 	die "gpg failed" if $? != 0;
 }
 
 sub recipient {
+	my @flags = ();
+
 	open my $fh, '<', "$store/.gpg-id"
 	    or die "can't open recipient file";
-	my $r = <$fh>;
-	chomp $r;
+
+	while (<$fh>) {
+		chomp;
+		push @flags, "-r", $_;
+	}
+
 	close($fh);
-	return $r;
+	return @flags;
 }
 
 sub passfind {
@@ -269,7 +275,7 @@ sub cmd_tee {
 	my $msg = -f $file ? "update $name" : "+$name";
 	make_path(dirname $file);
 
-	my @args = ($gpg, @gpg_flags, '-e', '-r', recipient(),
+	my @args = ($gpg, @gpg_flags, '-e', recipient(),
 	    '--batch', '--yes', '-o', $file);
 	open my $fh, '|-', @args;
 
