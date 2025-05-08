@@ -70,6 +70,21 @@ exit 0;
 
 # utils
 
+sub switchstore {
+	my $entry = shift;
+	my $target_dir = dirname($entry);
+
+	while ($target_dir ne $store) {
+		last if -f "$target_dir/.gpg-id";
+		$target_dir = dirname($target_dir);
+	}
+
+	chdir "$target_dir";
+	$entry =~ s,$target_dir/*,,;
+	$store = $target_dir;
+	return $entry;
+}
+
 sub name2file {
 	my $f = shift;
 	$f .= ".gpg" unless $f =~ m,\.gpg$,;
@@ -106,7 +121,7 @@ sub edit {
 sub recipient {
 	my @flags = ();
 
-	open my $fh, '<', "$store/.gpg-id"
+	open my $fh, '<', ".gpg-id"
 	    or die "can't open recipient file";
 
 	while (<$fh>) {
@@ -211,6 +226,7 @@ sub cmd_edit {
 	my $epath = name2file $entry;
 
 	my ($fh, $tempfile) = tempfile "/tmp/plass-XXXXXXXXXX";
+	$epath = switchstore $epath;
 	eval { edit $editor, $fh, $tempfile, $epath };
 	unlink $tempfile;
 	die "$@\n" if $@;
@@ -274,6 +290,7 @@ sub cmd_tee {
 
 	my $msg = -f $file ? "update $name" : "+$name";
 	make_path(dirname $file);
+	$file = switchstore $file;
 
 	my @args = ($gpg, @gpg_flags, '-e', recipient(),
 	    '--batch', '--yes', '-o', $file);
